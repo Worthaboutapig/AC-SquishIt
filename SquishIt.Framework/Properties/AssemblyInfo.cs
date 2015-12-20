@@ -42,4 +42,3 @@ using System.Security;
 [assembly: AssemblyVersion("0.9.8.1")]
 [assembly: AssemblyFileVersion("0.9.8.1")]
 [assembly: InternalsVisibleTo("SquishIt.Tests")]
-[assembly: AllowPartiallyTrustedCallers]
