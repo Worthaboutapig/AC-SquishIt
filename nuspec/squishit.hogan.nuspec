@@ -12,12 +12,11 @@
     <dependencies>
       <dependency id="SquishIt" version="1.0.0-alpha2" />
       <dependency id="Jurassic" version="2.1.1" />
-      <dependency id="WebActivator" version="1.4" />
+      <dependency id="WebActivatorEx" version="2.0" />
     </dependencies>
   </metadata>
   <files>
     <file src="..\SquishIt.Hogan\bin\Release\SquishIt.Hogan.dll" target="lib\SquishIt.Hogan.dll" />
     <file src="..\SquishIt.Hogan\bin\Release\SquishIt.Hogan.pdb" target="lib\SquishIt.Hogan.pdb" />
-    <file src="..\SquishIt.Hogan\Content\App_Start\SquishItHogan.cs.pp" target="Content\App_Start\SquishItHogan.cs.pp" />
   </files>
 </package>

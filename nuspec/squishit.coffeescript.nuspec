@@ -12,11 +12,10 @@
     <dependencies>
       <dependency id="SquishIt" version="1.0.0-alpha2" />
       <dependency id="Jurassic" version="2.1.1" />
-      <dependency id="WebActivator" version="1.4" />
+      <dependency id="WebActivatorEx" version="2.0" />
     </dependencies>
   </metadata>
   <files>
     <file src="..\SquishIt.CoffeeScript\bin\Release\SquishIt.CoffeeScript.dll" target="lib\SquishIt.CoffeeScript.dll" />
-    <file src="..\SquishIt.CoffeeScript\Content\App_Start\SquishItCoffeeScript.cs.pp" target="Content\App_Start\SquishItCoffeeScript.cs.pp" />
   </files>
 </package>
