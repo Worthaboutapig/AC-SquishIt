@@ -4,6 +4,7 @@ using NUnit.Framework;
 using SquishIt.Framework;
 using SquishIt.Framework.CSS;
 using SquishIt.Framework.Resolvers;
+using SquishIt.Framework.Web;
 using SquishIt.Tests.Helpers;
 
 namespace SquishIt.Tests
@@ -636,8 +637,8 @@ font-style: normal;
             // Base64 images can throw Windows PathTooLong exceptions (limit of 260 characters)
             // when present in a CSS file with non-base64 relative URLs.
             //
-
-            var cssAssetsFileHasher = new CSSAssetsFileHasher(string.Empty, new FileSystemResolver(), null, null);
+            var httpUtility = new SystemWebHttpUtility();
+            var cssAssetsFileHasher = new CSSAssetsFileHasher(string.Empty, new FileSystemResolver(), null, null, httpUtility);
             
             string css =
                 @"

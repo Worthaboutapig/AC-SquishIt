@@ -7,6 +7,7 @@ using SquishIt.Framework.Minifiers;
 using SquishIt.Framework.Minifiers.JavaScript;
 using SquishIt.Framework.Renderers;
 using SquishIt.Framework.Utilities;
+using SquishIt.Framework.Web;
 using MsMinifier = SquishIt.Framework.Minifiers.CSS.MsMinifier;
 using NullMinifier = SquishIt.Framework.Minifiers.CSS.NullMinifier;
 using YuiMinifier = SquishIt.Framework.Minifiers.CSS.YuiMinifier;
@@ -27,6 +28,7 @@ namespace SquishIt.Framework
         private IRenderer _defaultReleaseRenderer;
         private ITempPathProvider _defaultTempPathProvider = new TempPathProvider();
         private IRetryableFileOpener _defaultRetryableFileOpener = new RetryableFileOpener();
+        private IHttpUtility _defaultHttpUtility = new SystemWebHttpUtility();
 
         public Configuration()
         {
@@ -273,6 +275,17 @@ namespace SquishIt.Framework
         public ITempPathProvider DefaultTempPathProvider()
         {
             return _defaultTempPathProvider;
+        }
+
+        public Configuration UseHttpUtility(IHttpUtility httpUtility)
+        {
+            _defaultHttpUtility = httpUtility;
+            return this;
+        }
+
+        public IHttpUtility DefaultHttpUtility()
+        {
+            return _defaultHttpUtility;
         }
     }
 }

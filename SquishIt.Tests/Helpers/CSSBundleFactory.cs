@@ -2,6 +2,7 @@ using SquishIt.Framework.Caches;
 using SquishIt.Framework.CSS;
 using SquishIt.Framework.Files;
 using SquishIt.Framework.Utilities;
+using SquishIt.Framework.Web;
 using SquishIt.Tests.Stubs;
 
 namespace SquishIt.Tests.Helpers
@@ -13,8 +14,9 @@ namespace SquishIt.Tests.Helpers
         IFileReaderFactory fileReaderFactory = new StubFileReaderFactory();
         IDirectoryWrapper directoryWrapper = new StubDirectoryWrapper();
         IHasher hasher = new StubHasher("hash");
-    	IContentCache contentCache = new StubContentCache();
+        IContentCache contentCache = new StubContentCache();
         IContentCache rawContentCache = new StubContentCache();
+        IHttpUtility httpUtility = new SystemWebHttpUtility();
 
         public StubFileReaderFactory FileReaderFactory { get { return fileReaderFactory as StubFileReaderFactory; } }
         public StubFileWriterFactory FileWriterFactory { get { return fileWriterFactory as StubFileWriterFactory; } }
@@ -51,7 +53,7 @@ namespace SquishIt.Tests.Helpers
 
         public CSSBundle Create()
         {
-            return new CSSBundle(debugStatusReader, fileWriterFactory, fileReaderFactory, directoryWrapper, hasher, contentCache, rawContentCache);
+            return new CSSBundle(debugStatusReader, fileWriterFactory, fileReaderFactory, directoryWrapper, hasher, contentCache, rawContentCache, httpUtility);
         }
 
         public CSSBundleFactory WithContents(string css)

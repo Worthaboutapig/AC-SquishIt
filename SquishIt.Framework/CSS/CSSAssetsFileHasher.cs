@@ -1,8 +1,8 @@
 ﻿using System;
 using System.IO;
-using System.Web;
 using SquishIt.Framework.Resolvers;
 using SquishIt.Framework.Utilities;
+using SquishIt.Framework.Web;
 
 namespace SquishIt.Framework.CSS
 {
@@ -12,13 +12,20 @@ namespace SquishIt.Framework.CSS
         protected readonly IResolver FileSystemResolver;
         protected readonly IHasher Hasher;
         private readonly IPathTranslator pathTranslator;
+        private readonly IHttpUtility httpUtility;
 
-        public CSSAssetsFileHasher(string hashQueryStringKeyName, IResolver fileResolver, IHasher hasher, IPathTranslator pathTranslator)
+        public CSSAssetsFileHasher(string hashQueryStringKeyName, IResolver fileResolver, IHasher hasher, IPathTranslator pathTranslator, IHttpUtility httpUtility)
         {
+            if (httpUtility == null)
+            {
+                throw new ArgumentNullException("httpUtility");
+            }
+
             HashQueryStringKeyName = hashQueryStringKeyName;
             FileSystemResolver = fileResolver;
             Hasher = hasher;
             this.pathTranslator = pathTranslator;
+            this.httpUtility = httpUtility;
         }
 
         public string AppendFileHash(string cssFilePath, string url)
@@ -96,7 +103,7 @@ namespace SquishIt.Framework.CSS
         /// <param name="key">The key to use.</param>
         /// <param name="value">The value to use.</param>
         /// <returns></returns>
-        static string AppendQueryStringPairValue(string url, string key, string value)
+        string AppendQueryStringPairValue(string url, string key, string value)
         {
             var path = url;
             var queryString = string.Empty;
@@ -109,7 +116,7 @@ namespace SquishIt.Framework.CSS
                 queryString = url.Substring(queryStringPosition);
             }
 
-            var querystring = HttpUtility.ParseQueryString(queryString);
+            var querystring = httpUtility.ParseQueryString(queryString);
 
             querystring.Add(key, value);
 
