@@ -28,7 +28,7 @@ namespace SquishIt.Framework
         private IRenderer _defaultReleaseRenderer;
         private ITempPathProvider _defaultTempPathProvider = new TempPathProvider();
         private IRetryableFileOpener _defaultRetryableFileOpener = new RetryableFileOpener();
-        private IHttpUtility _defaultHttpUtility = new SystemWebHttpUtility();
+        private IHttpUtility _defaultHttpUtility;
 
         public Configuration()
         {
@@ -279,12 +279,23 @@ namespace SquishIt.Framework
 
         public Configuration UseHttpUtility(IHttpUtility httpUtility)
         {
+            if (httpUtility == null)
+            {
+                throw new ArgumentNullException("httpUtility");
+            }
+
             _defaultHttpUtility = httpUtility;
+
             return this;
         }
 
         public IHttpUtility DefaultHttpUtility()
         {
+            if (_defaultHttpUtility == null)
+            {
+                throw new InvalidOperationException("Call 'UseHttpUtility' before requesting the default.");
+            }
+
             return _defaultHttpUtility;
         }
     }

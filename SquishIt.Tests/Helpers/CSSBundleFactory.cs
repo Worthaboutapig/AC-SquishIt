@@ -1,3 +1,4 @@
+using System;
 using SquishIt.Framework.Caches;
 using SquishIt.Framework.CSS;
 using SquishIt.Framework.Files;
@@ -16,10 +17,20 @@ namespace SquishIt.Tests.Helpers
         IHasher hasher = new StubHasher("hash");
         IContentCache contentCache = new StubContentCache();
         IContentCache rawContentCache = new StubContentCache();
-        IHttpUtility httpUtility = new SystemWebHttpUtility();
+        IHttpUtility httpUtility;
 
         public StubFileReaderFactory FileReaderFactory { get { return fileReaderFactory as StubFileReaderFactory; } }
         public StubFileWriterFactory FileWriterFactory { get { return fileWriterFactory as StubFileWriterFactory; } }
+
+        public CSSBundleFactory(IHttpUtility httpUtility)
+        {
+            if (httpUtility == null)
+            {
+                throw new ArgumentNullException("httpUtility");
+            }
+
+            this.httpUtility = httpUtility;
+        }
 
         public CSSBundleFactory WithDebuggingEnabled(bool enabled)
         {

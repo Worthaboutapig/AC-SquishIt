@@ -2,6 +2,7 @@
 using NUnit.Framework;
 using SquishIt.Framework.Files;
 using SquishIt.Framework.Utilities;
+using SquishIt.Framework.Web;
 using SquishIt.Sass;
 using SquishIt.Tests.Helpers;
 using SquishIt.Tests.Stubs;
@@ -9,7 +10,7 @@ using SquishIt.Tests.Stubs;
 namespace SquishIt.Tests
 {
     [TestFixture(Category = "IgnoreCI", Description = "Assembly loading issues on build server.")]
-    public class SassTests
+    public abstract class SassTests : WebTests
     {
         CSSBundleFactory cssBundleFactory;
         IHasher hasher;
@@ -50,10 +51,18 @@ $margin: 16px
   border-color: #3bbfce; }
 </style>") + Environment.NewLine;//account for stringbuilder
 
+        protected SassTests(IHttpUtility httpUtility) : base(httpUtility)
+        {
+            if (httpUtility == null)
+            {
+                throw new ArgumentNullException("httpUtility");
+            }
+        }
+
         [SetUp]
         public void Setup()
         {
-            cssBundleFactory = new CSSBundleFactory();
+            cssBundleFactory = new CSSBundleFactory(httpUtility);
             var retryableFileOpener = new RetryableFileOpener();
             hasher = new Hasher(retryableFileOpener);
         }

@@ -10,10 +10,21 @@ using SquishIt.Framework.Web;
 
 namespace SquishIt.Tests
 {
-    [TestFixture]
-    public class AssetsFileHasherTests
+    using System;
+
+    public abstract class AssetsFileHasherTests
     {
-        IHttpUtility httpUtility = new SystemWebHttpUtility();
+        private readonly IHttpUtility httpUtility;
+
+        protected AssetsFileHasherTests(IHttpUtility httpUtility)
+        {
+            if (httpUtility == null)
+            {
+                throw new ArgumentNullException("httpUtility");
+            }
+
+            this.httpUtility = httpUtility;
+        }
 
         [Test]
         public void DoesNotAppendHashIfFileIsRemote()

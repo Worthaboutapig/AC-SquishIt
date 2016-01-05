@@ -163,7 +163,6 @@
     <Compile Include="Utilities\TrustLevel.cs" />
     <Compile Include="Platform.cs" />
     <Compile Include="Web\IHttpUtility.cs" />
-    <Compile Include="Web\SystemWebHttpUtility.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config">
