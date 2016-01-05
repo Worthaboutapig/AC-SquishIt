@@ -97,25 +97,25 @@ alert 'I knew it!' if elvis?";
         }
 
         [TestCase(typeof(MsIeCoffeeScript.Coffee.CoffeeScriptCompiler)), Platform(Include = "Unix, Linux, Mono")]
-		[TestCase(typeof(CoffeeScript.Coffee.CoffeeScriptCompiler)), Platform(Include = "Unix, Linux, Mono")]
-		public void CompileFailsGracefullyOnMono (Type compilerType)
-		{
-			var compiler = Activator.CreateInstance (compilerType);
-			var method = compilerType.GetMethod ("Compile");
+        [TestCase(typeof(CoffeeScript.Coffee.CoffeeScriptCompiler)), Platform(Include = "Unix, Linux, Mono")]
+        public void CompileFailsGracefullyOnMono (Type compilerType)
+        {
+            var compiler = Activator.CreateInstance (compilerType);
+            var method = compilerType.GetMethod ("Compile");
 
-			string message;
-			if (Platform.Mono && Platform.MonoVersion >= new Version("2.10.8")) 
-			{
-				var ex = Assert.Throws<System.Reflection.TargetInvocationException>(() => method.Invoke (compiler, new[] { "" }));
-				message = ex.InnerException.Message;
-			} 
-			else 
-			{
-				var ex = Assert.Throws<Exception>(() => method.Invoke (compiler, new[] { "" }));
-				message = ex.Message;
-			}
-			Assert.AreEqual("Coffeescript not yet supported for mono.", message);
-		}
+            string message;
+            if (Platform.Mono && Platform.MonoVersion >= new Version("2.10.8")) 
+            {
+                var ex = Assert.Throws<System.Reflection.TargetInvocationException>(() => method.Invoke (compiler, new[] { "" }));
+                message = ex.InnerException.Message;
+            } 
+            else 
+            {
+                var ex = Assert.Throws<Exception>(() => method.Invoke (compiler, new[] { "" }));
+                message = ex.Message;
+            }
+            Assert.AreEqual("Coffeescript not yet supported for mono.", message);
+        }
 
     }
 }

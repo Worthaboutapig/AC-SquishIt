@@ -47,6 +47,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SquishIt.AspNet", "SquishIt
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SquishIt.AspNet.Tests", "SquishIt.AspNet.Tests\SquishIt.AspNet.Tests.csproj", "{EF036293-48C0-4D9F-B46A-3AB04EB62F0E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SquishIt.Nancy", "SquishIt.Nancy\SquishIt.Nancy.csproj", "{5E04B884-B6C5-4411-AF0A-15B9C7F9201E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SquishIt.Nancy.Tests", "SquishIt.Nancy.Tests\SquishIt.Nancy.Tests.csproj", "{600E7350-4096-451F-AAF6-5F26E42CE4D5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -105,6 +109,14 @@ Global
 		{EF036293-48C0-4D9F-B46A-3AB04EB62F0E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EF036293-48C0-4D9F-B46A-3AB04EB62F0E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EF036293-48C0-4D9F-B46A-3AB04EB62F0E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5E04B884-B6C5-4411-AF0A-15B9C7F9201E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5E04B884-B6C5-4411-AF0A-15B9C7F9201E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5E04B884-B6C5-4411-AF0A-15B9C7F9201E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5E04B884-B6C5-4411-AF0A-15B9C7F9201E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{600E7350-4096-451F-AAF6-5F26E42CE4D5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{600E7350-4096-451F-AAF6-5F26E42CE4D5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{600E7350-4096-451F-AAF6-5F26E42CE4D5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{600E7350-4096-451F-AAF6-5F26E42CE4D5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -120,6 +132,7 @@ Global
 		{1776A1BF-5096-4833-9E28-59D9627A6700} = {FD2AA282-971B-4E20-B5F7-E244A05627DC}
 		{8D1EE11A-C71D-453D-B0BC-0A76C20B010E} = {FD2AA282-971B-4E20-B5F7-E244A05627DC}
 		{EF036293-48C0-4D9F-B46A-3AB04EB62F0E} = {32F293A7-62E4-4D60-8E60-63FD217F31F3}
+		{600E7350-4096-451F-AAF6-5F26E42CE4D5} = {32F293A7-62E4-4D60-8E60-63FD217F31F3}
 	EndGlobalSection
 	GlobalSection(MonoDevelopProperties) = preSolution
 		StartupItem = SquishIt\SquishIt.csproj

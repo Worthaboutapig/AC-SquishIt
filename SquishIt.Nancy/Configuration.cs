@@ -1,7 +1,7 @@
-﻿using SquishIt.AspNet.Web;
-
-namespace SquishIt.AspNet
+﻿namespace SquishIt.Nancy
 {
+    using Web;
+
     /// <summary>
     /// Extends the framework configuration with the System.Web-specific configuration data.
     /// </summary>

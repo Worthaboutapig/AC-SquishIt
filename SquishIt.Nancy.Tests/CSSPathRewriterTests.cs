@@ -1,7 +1,7 @@
 ﻿using NUnit.Framework;
-using SquishIt.AspNet.Web;
+using SquishIt.Nancy.Web;
 
-namespace SquishIt.AspNet.Tests
+namespace SquishIt.Nancy.Tests
 {
     [TestFixture]
     public class CSSPathRewriterTests : SquishIt.Tests.CSSPathRewriterTests
