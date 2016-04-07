@@ -8,18 +8,18 @@ using SquishIt.Tests.Helpers;
 using SquishIt.Tests.Stubs;
 using SquishIt.Framework;
 using System.Threading;
+using SquishIt.Framework.Web;
 
-namespace SquishIt.Tests 
+namespace SquishIt.Tests
 {
-    [TestFixture]
-    public class LessTests
+    public abstract class LessTests : WebTests
     {
         string cssLess = TestUtilities.NormalizeLineEndings (@"@brand_color: #4D926F;
 
                                     #header {
                                         color: @brand_color;
                                     }
- 
+
                                     h2 {
                                         color: @brand_color;
                                     }");
@@ -28,9 +28,17 @@ namespace SquishIt.Tests
         IHasher hasher;
         private IPathTranslator translator = Configuration.Instance.DefaultPathTranslator();
 
+        protected LessTests(IHttpUtility httpUtility) : base(httpUtility)
+        {
+            if (httpUtility == null)
+            {
+                throw new ArgumentNullException("httpUtility");
+            }
+        }
+
         [SetUp]
         public void Setup () {
-            cssBundleFactory = new CSSBundleFactory ();
+            cssBundleFactory = new CSSBundleFactory(httpUtility);
             var retryableFileOpener = new RetryableFileOpener ();
             hasher = new Hasher (retryableFileOpener);
         }
@@ -88,7 +96,7 @@ namespace SquishIt.Tests
         [Test]
         public void CanBundleNestedLessInDifferentDirectoriesMultiThreaded()
         {
-            // This test is dependant on a race condition so may not cause a 
+            // This test is dependant on a race condition so may not cause a
             // failure every time even when a bug is present. However on a
             // multicore machine it seems to have a high failure rate.
 
@@ -133,7 +141,7 @@ namespace SquishIt.Tests
 
             // Trigger the parsing of two different .less files in different
             // directories at the same time. Both import a file called other.less
-            // which should be found in their own directory, but issues with 
+            // which should be found in their own directory, but issues with
             // changing the current directory at the wrong time could cause
             // them to pick up the imported file from the incorrect location.
             var taskA = new Thread(() =>
@@ -166,7 +174,6 @@ namespace SquishIt.Tests
             Assert.Contains(translator.ResolveAppRelativePathToFileSystem("css_A/other.less"), cssBundleA.bundleState.DependentFiles);
             Assert.Contains(translator.ResolveAppRelativePathToFileSystem("css_B/other.less"), cssBundleB.bundleState.DependentFiles);
         }
- 
 
         [Test]
         public void CanBundleCssWithArbitraryLess ()

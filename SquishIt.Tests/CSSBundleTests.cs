@@ -15,11 +15,12 @@ using SquishIt.Framework.Utilities;
 using SquishIt.Tests.Helpers;
 using SquishIt.Tests.Stubs;
 using HttpContext = SquishIt.Framework.HttpContext;
+using SquishIt.Framework.Web;
 
 namespace SquishIt.Tests
 {
     [TestFixture]
-    public class CSSBundleTests
+    public abstract class CSSBundleTests : WebTests
     {
         string css = TestUtilities.NormalizeLineEndings(@" li {
                                     margin-bottom:0.1em;
@@ -35,7 +36,7 @@ namespace SquishIt.Tests
                                 .FloatRight {
                                     float:right;
                                 }
-                                
+
                                 .FloatLeft {
                                     float:left;
                                 }");
@@ -55,16 +56,22 @@ namespace SquishIt.Tests
         string minifiedCss2 =
             "li{margin-bottom:.1em;margin-left:0;margin-top:.1em}th{font-weight:normal;vertical-align:bottom}";
 
-
-
         CSSBundleFactory cssBundleFactory;
         IHasher stubHasher;
+
+        protected CSSBundleTests(IHttpUtility httpUtility) : base(httpUtility)
+        {
+            if (httpUtility == null)
+            {
+                throw new ArgumentNullException("httpUtility");
+            }
+        }
 
         [SetUp]
         public void Setup()
         {
             stubHasher = new StubHasher("hash");
-            cssBundleFactory = new CSSBundleFactory()
+            cssBundleFactory = new CSSBundleFactory(httpUtility)
                 .WithHasher(stubHasher);
         }
 
@@ -1171,7 +1178,7 @@ background:url(images/button-loader.gif) #ccc;
             var hrColor = "hr {color:sienna;}";
             var p = "p {margin-left:20px;}";
 
-            var tag = new CSSBundleFactory()
+            var tag = new CSSBundleFactory(httpUtility)
                 .WithDebuggingEnabled(true)
                 .Create()
                 .AddString(css)
@@ -1197,7 +1204,7 @@ background:url(images/button-loader.gif) #ccc;
 
             var writerFactory = new StubFileWriterFactory();
 
-            var tag = new CSSBundleFactory()
+            var tag = new CSSBundleFactory(httpUtility)
                 .WithFileReaderFactory(readerFactory)
                 .WithFileWriterFactory(writerFactory)
                 .WithDebuggingEnabled(false)
@@ -1228,7 +1235,7 @@ background:url(images/button-loader.gif) #ccc;
 
             var writerFactory = new StubFileWriterFactory();
 
-            var tag = new CSSBundleFactory()
+            var tag = new CSSBundleFactory(httpUtility)
                 .WithFileReaderFactory(readerFactory)
                 .WithFileWriterFactory(writerFactory)
                 .WithDebuggingEnabled(true)
@@ -1251,7 +1258,7 @@ background:url(images/button-loader.gif) #ccc;
             var hrColor = "hr {color:sienna;}";
             var p = "p {margin-left:20px;}";
 
-            var tag = new CSSBundleFactory()
+            var tag = new CSSBundleFactory(httpUtility)
                 .WithDebuggingEnabled(true)
                 .Create()
                 .AddString(css)
@@ -1266,7 +1273,7 @@ background:url(images/button-loader.gif) #ccc;
         [Test]
         public void DoesNotRenderDuplicateArbitraryStringsInDebug()
         {
-            var tag = new CSSBundleFactory()
+            var tag = new CSSBundleFactory(httpUtility)
                 .WithDebuggingEnabled(true)
                 .Create()
                 .AddString(css)
@@ -1287,7 +1294,7 @@ background:url(images/button-loader.gif) #ccc;
 
             var writerFactory = new StubFileWriterFactory();
 
-            var tag = new CSSBundleFactory()
+            var tag = new CSSBundleFactory(httpUtility)
                     .WithDebuggingEnabled(false)
                     .WithFileWriterFactory(writerFactory)
                     .WithHasher(new StubHasher("hashy"))

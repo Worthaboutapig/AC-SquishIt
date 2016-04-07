@@ -155,6 +155,7 @@
     <Compile Include="Files\IFileWriterFactory.cs" />
     <Compile Include="Utilities\IFilePathMutexProvider.cs" />
     <Compile Include="Utilities\IHasher.cs" />
+    <Compile Include="Utilities\IMachineConfigReader.cs" />
     <Compile Include="Utilities\MachineConfigReader.cs" />
     <Compile Include="PathTranslator.cs" />
     <Compile Include="Utilities\FilePathMutexProvider.cs" />
@@ -162,6 +163,8 @@
     <Compile Include="Utilities\TempFileResolutionCache.cs" />
     <Compile Include="Utilities\TrustLevel.cs" />
     <Compile Include="Platform.cs" />
+    <Compile Include="Web\IHttpUtility.cs" />
+    <Compile Include="Web\IVirtualPathUtility.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config">

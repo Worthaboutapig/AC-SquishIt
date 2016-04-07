@@ -1,7 +1,9 @@
+using System;
 using SquishIt.Framework.Caches;
 using SquishIt.Framework.CSS;
 using SquishIt.Framework.Files;
 using SquishIt.Framework.Utilities;
+using SquishIt.Framework.Web;
 using SquishIt.Tests.Stubs;
 
 namespace SquishIt.Tests.Helpers
@@ -13,11 +15,22 @@ namespace SquishIt.Tests.Helpers
         IFileReaderFactory fileReaderFactory = new StubFileReaderFactory();
         IDirectoryWrapper directoryWrapper = new StubDirectoryWrapper();
         IHasher hasher = new StubHasher("hash");
-    	IContentCache contentCache = new StubContentCache();
+        IContentCache contentCache = new StubContentCache();
         IContentCache rawContentCache = new StubContentCache();
+        IHttpUtility httpUtility;
 
         public StubFileReaderFactory FileReaderFactory { get { return fileReaderFactory as StubFileReaderFactory; } }
         public StubFileWriterFactory FileWriterFactory { get { return fileWriterFactory as StubFileWriterFactory; } }
+
+        public CSSBundleFactory(IHttpUtility httpUtility)
+        {
+            if (httpUtility == null)
+            {
+                throw new ArgumentNullException("httpUtility");
+            }
+
+            this.httpUtility = httpUtility;
+        }
 
         public CSSBundleFactory WithDebuggingEnabled(bool enabled)
         {
@@ -51,7 +64,7 @@ namespace SquishIt.Tests.Helpers
 
         public CSSBundle Create()
         {
-            return new CSSBundle(debugStatusReader, fileWriterFactory, fileReaderFactory, directoryWrapper, hasher, contentCache, rawContentCache);
+            return new CSSBundle(debugStatusReader, fileWriterFactory, fileReaderFactory, directoryWrapper, hasher, contentCache, rawContentCache, httpUtility);
         }
 
         public CSSBundleFactory WithContents(string css)

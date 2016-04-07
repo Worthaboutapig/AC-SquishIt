@@ -1,17 +1,24 @@
-﻿using System.IO;
-using Moq;
+﻿using System;
 using NUnit.Framework;
 using SquishIt.Framework;
 using SquishIt.Framework.CSS;
 using SquishIt.Framework.Resolvers;
+using SquishIt.Framework.Web;
 using SquishIt.Tests.Helpers;
 
 namespace SquishIt.Tests
 {
-    [TestFixture]
-    public class CSSPathRewriterTests
+    public abstract class CSSPathRewriterTests : WebTests
     {
         //TODO: mock path translators
+        protected CSSPathRewriterTests(IHttpUtility httpUtility) : base(httpUtility)
+        {
+            if (httpUtility == null)
+            {
+                throw new ArgumentNullException("httpUtility");
+            }
+        }
+
         [Test]
         public void CanRewritePathsInCssWhenAbsolutePathsAreUsed()
         {
@@ -636,9 +643,8 @@ font-style: normal;
             // Base64 images can throw Windows PathTooLong exceptions (limit of 260 characters)
             // when present in a CSS file with non-base64 relative URLs.
             //
+            var cssAssetsFileHasher = new CSSAssetsFileHasher(string.Empty, new FileSystemResolver(), null, null, httpUtility);
 
-            var cssAssetsFileHasher = new CSSAssetsFileHasher(string.Empty, new FileSystemResolver(), null, null);
-            
             string css =
                 @"
                                                         .header {

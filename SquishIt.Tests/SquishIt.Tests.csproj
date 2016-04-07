@@ -115,6 +115,7 @@
     <Compile Include="Stubs\StubPreprocessors.cs" />
     <Compile Include="Stubs\StubResolver.cs" />
     <Compile Include="VersionTests.cs" />
+    <Compile Include="WebTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\SquishIt.CoffeeScript\SquishIt.CoffeeScript.csproj">

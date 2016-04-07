@@ -1,25 +1,33 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using NUnit.Framework;
 using SquishIt.Framework;
 using SquishIt.Framework.Base;
 using SquishIt.Framework.CSS;
-using SquishIt.Framework.Files;
 using SquishIt.Framework.Utilities;
+using SquishIt.Framework.Web;
 using SquishIt.Tests.Helpers;
 using SquishIt.Tests.Stubs;
 
 namespace SquishIt.Tests
 {
-    [TestFixture]
-    public class StylePreprocessorPipelineTests
+    public abstract class StylePreprocessorPipelineTests : WebTests
     {
         CSSBundleFactory cssBundleFactory;
         IHasher hasher;
 
+        protected StylePreprocessorPipelineTests(IHttpUtility httpUtility) : base(httpUtility)
+        {
+            if (httpUtility == null)
+            {
+                throw new ArgumentNullException("httpUtility");
+            }
+        }
+
         [SetUp]
         public void Setup()
         {
-            cssBundleFactory = new CSSBundleFactory();
+            cssBundleFactory = new CSSBundleFactory(httpUtility);
             hasher = new StubHasher("hash");
         }
 

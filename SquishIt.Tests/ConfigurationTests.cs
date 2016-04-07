@@ -1,17 +1,28 @@
-﻿using System.Web;
+﻿using System;
+using System.Web;
 using Moq;
 using NUnit.Framework;
 using SquishIt.Framework;
-using SquishIt.Framework.Resolvers;
 using SquishIt.Framework.Utilities;
 using SquishIt.Tests.Helpers;
 using SquishIt.Tests.Stubs;
 
 namespace SquishIt.Tests
 {
-    [TestFixture]
-    public class ConfigurationTests
+    public abstract class ConfigurationTests
     {
+        private readonly Configuration configuration;
+
+        protected ConfigurationTests(Configuration configuration)
+        {
+            if (configuration == null)
+            {
+                throw new ArgumentNullException(nameof(configuration));
+            }
+
+            this.configuration = configuration;
+        }
+
         [Test]
         public void WithHasher()
         {
@@ -19,7 +30,7 @@ namespace SquishIt.Tests
             hasher.Setup(h => h.GetHash(It.IsAny<string>()))
                 .Returns("pizza");
 
-            var configuration = new Configuration().UseHasher(hasher.Object);
+            configuration.UseHasher(hasher.Object);
 
             var trustLevel = new Mock<ITrustLevel>();
             trustLevel.SetupGet(tl => tl.CurrentTrustLevel).Returns(AspNetHostingPermissionLevel.Unrestricted); //globally configured hasher is used another 2 times in high / full trust when obtaining mutex
@@ -44,10 +55,9 @@ namespace SquishIt.Tests
 
             hasher.Verify(f => f.GetHash(It.Is<string>(s => s.EndsWith(".js"))), Times.Once());//js bundle rendering mutex
             hasher.Verify(h => h.GetHash(It.Is<string>(s => s.StartsWith("test;"))), Times.Once());//js content
-            
+
             hasher.Verify(f => f.GetHash(It.Is<string>(s => s.EndsWith(".css"))), Times.Once());//css bundle rendering mutex
             hasher.Verify(h => h.GetHash("test"), Times.Once());//css content
-
         }
     }
 }

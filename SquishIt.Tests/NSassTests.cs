@@ -2,14 +2,15 @@
 using NUnit.Framework;
 using SquishIt.Framework.Files;
 using SquishIt.Framework.Utilities;
+using SquishIt.Framework.Web;
 using SquishIt.NSass;
 using SquishIt.Tests.Helpers;
 using SquishIt.Tests.Stubs;
 
 namespace SquishIt.Tests
 {
-    [TestFixture(Category="IgnoreCI", Description="Assembly loading issues on build server.")]
-    public class NSassTests
+    [TestFixture(Category = "IgnoreCI", Description = "Assembly loading issues on build server.")]
+    public abstract class NSassTests : WebTests
     {
         CSSBundleFactory cssBundleFactory;
         IHasher hasher;
@@ -29,12 +30,19 @@ namespace SquishIt.Tests
                     }";
 
         string renderedCss = @".content-navigation{border-color:#3bbfce;color:#2ca2af}.border{padding:8px;margin:8px;border-color:#3bbfce}";
-       
+
+        protected NSassTests(IHttpUtility httpUtility) : base(httpUtility)
+        {
+            if (httpUtility == null)
+            {
+                throw new ArgumentNullException("httpUtility");
+            }
+        }
 
         [SetUp]
         public void Setup()
         {
-            cssBundleFactory = new CSSBundleFactory();
+            cssBundleFactory = new CSSBundleFactory(httpUtility);
             var retryableFileOpener = new RetryableFileOpener();
             hasher = new Hasher(retryableFileOpener);
         }
