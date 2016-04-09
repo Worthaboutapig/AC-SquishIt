@@ -25,6 +25,7 @@
     </FileUpgradeFlags>
     <OldToolsVersion>4.0</OldToolsVersion>
     <UpgradeBackupLocation />
+    <UseGlobalApplicationHostFile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -174,6 +175,10 @@
     <Content Include="Views\Home\Index.cshtml" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\SquishIt.AspNet\SquishIt.AspNet.csproj">
+      <Project>{4e871b01-dc76-491f-85fa-e37477b257ca}</Project>
+      <Name>SquishIt.AspNet</Name>
+    </ProjectReference>
     <ProjectReference Include="..\SquishIt.Framework\SquishIt.Framework.csproj">
       <Project>{50C3BC24-E534-4B78-8E8E-CB2C4053321D}</Project>
       <Name>SquishIt.Framework</Name>

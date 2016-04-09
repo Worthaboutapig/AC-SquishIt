@@ -1,23 +1,36 @@
-using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using SquishIt.Framework.Utilities;
 
 namespace SquishIt.Framework.Resolvers
 {
-    public class HttpResolver: IResolver
-    {
-        private readonly ITempPathProvider tempPathProvider = Configuration.Instance.DefaultTempPathProvider();
+    using System.Diagnostics.Contracts;
 
-        public string Resolve(string file)
+    public class HttpResolver : IFileResolver
+    {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="T:System.Object"/> class.
+        /// </summary>
+        public HttpResolver(ITempPathProvider tempPathProvider)
+        {
+            Contract.Requires(tempPathProvider != null);
+
+            Contract.Ensures(_tempPathProvider != null);
+
+            _tempPathProvider = tempPathProvider;
+        }
+
+        private readonly ITempPathProvider _tempPathProvider;
+
+        public string ResolveFilename(string filePath)
         {
             string resolved;
-            if (TempFileResolutionCache.TryGetValue(file, out resolved))
+            if (TempFileResolutionCache.TryGetValue(filePath, out resolved))
             {
                 return resolved;
             }
-            return ResolveWebResource(file);
+
+            return ResolveWebResource(filePath);
         }
 
         private string ResolveWebResource(string path)
@@ -31,13 +44,15 @@ namespace SquishIt.Framework.Resolvers
                 {
                     contents = sr.ReadToEnd();
                 }
-                string fileName = tempPathProvider.ForFile();
+                var fileName = _tempPathProvider.ForFile();
 
                 using (var sw = new StreamWriter(fileName))
                 {
                     sw.Write(contents);
                 }
+
                 TempFileResolutionCache.Add(path, fileName);
+
                 return fileName;
             }
             finally
@@ -46,13 +61,14 @@ namespace SquishIt.Framework.Resolvers
             }
         }
 
-        public IEnumerable<string> ResolveFolder(string path, bool recursive, string debugFileExtension, IEnumerable<string> allowedExtensions, IEnumerable<string> disallowedExtensions) {
-            throw new NotImplementedException("Adding entire directories only supported by FileSystemResolver.");
-        }
+        //public IEnumerable<string> ResolveFolder(string path, bool recursive, string debugFileExtension, IEnumerable<string> allowedExtensions, IEnumerable<string> disallowedExtensions)
+        //{
+        //    throw new NotImplementedException("Adding entire directories only supported by FileSystemResolver.");
+        //}
 
-        public virtual bool IsDirectory(string path) 
-        {
-            return false;
-        }
+        //public virtual bool IsFolder(string path)
+        //{
+        //    return false;
+        //}
     }
 }

@@ -1,75 +1,100 @@
-using System;
+using System.Diagnostics.Contracts;
+using SquishIt.Framework;
 using SquishIt.Framework.Caches;
 using SquishIt.Framework.CSS;
 using SquishIt.Framework.Files;
+using SquishIt.Framework.Resolvers;
 using SquishIt.Framework.Utilities;
 using SquishIt.Framework.Web;
 using SquishIt.Tests.Stubs;
 
 namespace SquishIt.Tests.Helpers
 {
-    internal class CSSBundleFactory
+    internal class CssBundleFactory
     {
-        IDebugStatusReader debugStatusReader = new StubDebugStatusReader();
-        IFileWriterFactory fileWriterFactory = new StubFileWriterFactory();
-        IFileReaderFactory fileReaderFactory = new StubFileReaderFactory();
-        IDirectoryWrapper directoryWrapper = new StubDirectoryWrapper();
-        IHasher hasher = new StubHasher("hash");
-        IContentCache contentCache = new StubContentCache();
-        IContentCache rawContentCache = new StubContentCache();
-        IHttpUtility httpUtility;
+        private IDebugStatusReader _debugStatusReader = new StubDebugStatusReader();
+        private IFileWriterFactory _fileWriterFactory = new StubFileWriterFactory();
+        private IFileReaderFactory _fileReaderFactory = new StubFileReaderFactory();
+        private IDirectoryWrapper _directoryWrapper = new StubDirectoryWrapper();
+        private IHasher _hasher = new StubHasher("hash");
+        private readonly IContentCache _contentCache = new StubContentCache();
+        private readonly IContentCache _rawContentCache = new StubContentCache();
+        private readonly IHttpUtility _httpUtility;
+        private readonly string _baseOutputHref;
+        private readonly IPathTranslator _pathTranslator;
+        private readonly FileSystemResolver _fileSystemResolver;
+        private readonly HttpResolver _httpResolver;
+        private readonly RootEmbeddedResourceResolver _rootEmbeddedResourceResolver;
+        private readonly StandardEmbeddedResourceResolver _standardEmbeddedResourceResolver;
 
-        public StubFileReaderFactory FileReaderFactory { get { return fileReaderFactory as StubFileReaderFactory; } }
-        public StubFileWriterFactory FileWriterFactory { get { return fileWriterFactory as StubFileWriterFactory; } }
+        public StubFileReaderFactory FileReaderFactory { get { return _fileReaderFactory as StubFileReaderFactory; } }
+        public StubFileWriterFactory FileWriterFactory { get { return _fileWriterFactory as StubFileWriterFactory; } }
 
-        public CSSBundleFactory(IHttpUtility httpUtility)
+        public CssBundleFactory(IHttpUtility httpUtility, string baseOutputHref, IPathTranslator pathTranslator, FileSystemResolver fileSystemResolver, HttpResolver httpResolver, RootEmbeddedResourceResolver rootEmbeddedResourceResolver, StandardEmbeddedResourceResolver standardEmbeddedResourceResolver)
         {
-            if (httpUtility == null)
-            {
-                throw new ArgumentNullException("httpUtility");
-            }
+            Contract.Requires(httpUtility != null);
+            Contract.Requires(baseOutputHref != null);
+            Contract.Requires(pathTranslator != null);
+            Contract.Requires(fileSystemResolver != null);
+            Contract.Requires(httpResolver != null);
+            Contract.Requires(rootEmbeddedResourceResolver != null);
+            Contract.Requires(standardEmbeddedResourceResolver != null);
 
-            this.httpUtility = httpUtility;
+            Contract.Ensures(_httpUtility != null);
+            Contract.Ensures(_baseOutputHref != null);
+            Contract.Ensures(_pathTranslator != null);
+            Contract.Ensures(_fileSystemResolver != null);
+            Contract.Ensures(_httpResolver != null);
+            Contract.Ensures(_rootEmbeddedResourceResolver != null);
+            Contract.Ensures(_standardEmbeddedResourceResolver != null);
+
+            _httpUtility = httpUtility;
+            _baseOutputHref = baseOutputHref;
+            _pathTranslator = pathTranslator;
+            _fileSystemResolver = fileSystemResolver;
+            _httpResolver = httpResolver;
+            _rootEmbeddedResourceResolver = rootEmbeddedResourceResolver;
+            _standardEmbeddedResourceResolver = standardEmbeddedResourceResolver;
         }
 
-        public CSSBundleFactory WithDebuggingEnabled(bool enabled)
+        public CssBundleFactory WithDebuggingEnabled(bool enabled)
         {
-            this.debugStatusReader = new StubDebugStatusReader(enabled);
+            _debugStatusReader = new StubDebugStatusReader(enabled);
             return this;
         }
 
-        public CSSBundleFactory WithFileWriterFactory(IFileWriterFactory fileWriterFactory)
+        public CssBundleFactory WithFileWriterFactory(IFileWriterFactory fileWriterFactory)
         {
-            this.fileWriterFactory = fileWriterFactory;
+            _fileWriterFactory = fileWriterFactory;
             return this;
         }
 
-        public CSSBundleFactory WithFileReaderFactory(IFileReaderFactory fileReaderFactory)
+        public CssBundleFactory WithFileReaderFactory(IFileReaderFactory fileReaderFactory)
         {
-            this.fileReaderFactory = fileReaderFactory;
+            _fileReaderFactory = fileReaderFactory;
             return this;
         }
 
-        public CSSBundleFactory WithCurrentDirectoryWrapper(IDirectoryWrapper directoryWrapper)
+        public CssBundleFactory WithCurrentDirectoryWrapper(IDirectoryWrapper directoryWrapper)
         {
-            this.directoryWrapper = directoryWrapper;
+            _directoryWrapper = directoryWrapper;
             return this;
         }
 
-        public CSSBundleFactory WithHasher(IHasher hasher)
+        public CssBundleFactory WithHasher(IHasher hasher)
         {
-            this.hasher = hasher;
+            _hasher = hasher;
             return this;
         }
 
         public CSSBundle Create()
         {
-            return new CSSBundle(debugStatusReader, fileWriterFactory, fileReaderFactory, directoryWrapper, hasher, contentCache, rawContentCache, httpUtility);
+            return new CSSBundle(_debugStatusReader, _fileWriterFactory, _fileReaderFactory, _directoryWrapper, _hasher, _contentCache, _rawContentCache, _httpUtility, _baseOutputHref, _pathTranslator, _fileSystemResolver, _httpResolver, _rootEmbeddedResourceResolver, _standardEmbeddedResourceResolver);
         }
 
-        public CSSBundleFactory WithContents(string css)
+        public CssBundleFactory WithContents(string css)
         {
-            (fileReaderFactory as StubFileReaderFactory).SetContents(css);
+            (_fileReaderFactory as StubFileReaderFactory).SetContents(css);
             return this;
         }
     }

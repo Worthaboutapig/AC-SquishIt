@@ -9,12 +9,12 @@ namespace SquishIt.Framework.CSS
     public class CSSAssetsFileHasher : ICSSAssetsFileHasher
     {
         protected readonly string HashQueryStringKeyName;
-        protected readonly IResolver FileSystemResolver;
+        protected readonly IFileResolver fileResolver;
         protected readonly IHasher Hasher;
         private readonly IPathTranslator pathTranslator;
         private readonly IHttpUtility httpUtility;
 
-        public CSSAssetsFileHasher(string hashQueryStringKeyName, IResolver fileResolver, IHasher hasher, IPathTranslator pathTranslator, IHttpUtility httpUtility)
+        public CSSAssetsFileHasher(string hashQueryStringKeyName, IFileResolver fileResolver, IHasher hasher, IPathTranslator pathTranslator, IHttpUtility httpUtility)
         {
             if (httpUtility == null)
             {
@@ -22,7 +22,7 @@ namespace SquishIt.Framework.CSS
             }
 
             HashQueryStringKeyName = hashQueryStringKeyName;
-            FileSystemResolver = fileResolver;
+            this.fileResolver = fileResolver;
             Hasher = hasher;
             this.pathTranslator = pathTranslator;
             this.httpUtility = httpUtility;
@@ -90,7 +90,7 @@ namespace SquishIt.Framework.CSS
                     resolvedUrl = pathTranslator.ResolveAppRelativePathToFileSystem(url);
                 }
 
-                return FileSystemResolver.Resolve(resolvedUrl);
+                return fileResolver.ResolveFilename(resolvedUrl);
             }
 
             return urlUri.LocalPath;

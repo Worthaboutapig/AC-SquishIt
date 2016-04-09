@@ -1,15 +1,30 @@
 ﻿using System;
+using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Threading;
 using NUnit.Framework;
 using SquishIt.Framework;
+using SquishIt.Framework.Utilities;
 
 namespace SquishIt.Tests
 {
-    [TestFixture]
-    public class MultipleWorkerProcessesTests
+    public abstract class MultipleWorkerProcessesTests
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="T:System.Object"/> class.
+        /// </summary>
+        protected MultipleWorkerProcessesTests(IDebugStatusReader debugStatusReader)
+        {
+            Contract.Requires(debugStatusReader != null);
+
+            Contract.Ensures(_debugStatusReader != null);
+
+            _debugStatusReader = debugStatusReader;
+        }
+
+        private readonly IDebugStatusReader _debugStatusReader;
+
         [Test,Explicit]
         public void ExceptionIsThrowWhenMultipleWorkerThreadsAreWorking()
         {
@@ -27,7 +42,7 @@ namespace SquishIt.Tests
                         {
                             System.Diagnostics.Debug.WriteLine("Writing CSS...");
 
-                            Bundle.Css()
+                            Bundle.Css(_debugStatusReader)
                                 .Add("1.css")
                                 .Add("2.css")
                                 .Add("3.css")

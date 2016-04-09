@@ -2,6 +2,7 @@
 using Moq;
 using NUnit.Framework;
 using SquishIt.Framework.Utilities;
+using SquishIt.Framework.Web;
 using SquishIt.Tests.Helpers;
 
 namespace SquishIt.Tests
@@ -13,12 +14,12 @@ namespace SquishIt.Tests
         public void ForceRelease()
         {
             //shouldn't touch anything on these
-            var httpContext = new Mock<HttpContextBase>(MockBehavior.Strict);
+            var httpContext = new Mock<IHttpContext>(MockBehavior.Strict);
             var machineConfigReader = new Mock<IMachineConfigReader>(MockBehavior.Strict);
 
             using(new HttpContextScope(httpContext.Object))
             {
-                var reader = new DebugStatusReader(machineConfigReader.Object);
+                var reader = new DebugStatusReader(machineConfigReader.Object, httpContext.Object);
                 reader.ForceRelease();
                 Assert.IsFalse(reader.IsDebuggingEnabled());
             }
@@ -31,12 +32,12 @@ namespace SquishIt.Tests
         public void ForceDebug()
         {
             //shouldn't touch anything on these
-            var httpContext = new Mock<HttpContextBase>(MockBehavior.Strict);
+            var httpContext = new Mock<IHttpContext>(MockBehavior.Strict);
             var machineConfigReader = new Mock<IMachineConfigReader>(MockBehavior.Strict);
 
             using(new HttpContextScope(httpContext.Object))
             {
-                var reader = new DebugStatusReader(machineConfigReader.Object);
+                var reader = new DebugStatusReader(machineConfigReader.Object, httpContext.Object);
                 reader.ForceDebug();
                 Assert.IsTrue(reader.IsDebuggingEnabled());
             }
@@ -50,12 +51,12 @@ namespace SquishIt.Tests
         public void Predicate(bool predicateReturn)
         {
             //shouldn't touch anything on these
-            var httpContext = new Mock<HttpContextBase>(MockBehavior.Strict);
+            var httpContext = new Mock<IHttpContext>(MockBehavior.Strict);
             var machineConfigReader = new Mock<IMachineConfigReader>(MockBehavior.Strict);
 
             using (new HttpContextScope(httpContext.Object))
             {
-                var reader = new DebugStatusReader(machineConfigReader.Object);
+                var reader = new DebugStatusReader(machineConfigReader.Object, httpContext.Object);
                 reader.ForceRelease();
                 Assert.AreEqual(predicateReturn, reader.IsDebuggingEnabled(() => predicateReturn));
             }
@@ -69,7 +70,7 @@ namespace SquishIt.Tests
         {
             var machineConfigReader = new Mock<IMachineConfigReader>(MockBehavior.Strict);
 
-            var reader = new DebugStatusReader(machineConfigReader.Object);
+            var reader = new DebugStatusReader(machineConfigReader.Object, null);
             Assert.IsFalse(reader.IsDebuggingEnabled());
 
             machineConfigReader.VerifyAll();
@@ -78,14 +79,14 @@ namespace SquishIt.Tests
         [Test]
         public void DebuggingExplicitlyDisabledInConfiguration()
         {
-            var httpContext = new Mock<HttpContextBase>();
+            var httpContext = new Mock<IHttpContext>();
             var machineConfigReader = new Mock<IMachineConfigReader>(MockBehavior.Strict);
 
             httpContext.SetupGet(hc => hc.IsDebuggingEnabled).Returns(false);
 
             using(new HttpContextScope(httpContext.Object))
             {
-                var reader = new DebugStatusReader(machineConfigReader.Object);
+                var reader = new DebugStatusReader(machineConfigReader.Object, httpContext.Object);
                 Assert.IsFalse(reader.IsDebuggingEnabled());
             }
 
@@ -96,7 +97,7 @@ namespace SquishIt.Tests
         [TestCase(false)]
         public void DebuggingExplicitlyEnabledInConfiguration_CheckMachineConfig(bool configReaderValue)
         {
-            var httpContext = new Mock<HttpContextBase>();
+            var httpContext = new Mock<IHttpContext>();
             var machineConfigReader = new Mock<IMachineConfigReader>(MockBehavior.Strict);
 
             httpContext.SetupGet(hc => hc.IsDebuggingEnabled).Returns(true);
@@ -104,7 +105,7 @@ namespace SquishIt.Tests
 
             using(new HttpContextScope(httpContext.Object))
             {
-                var reader = new DebugStatusReader(machineConfigReader.Object);
+                var reader = new DebugStatusReader(machineConfigReader.Object, httpContext.Object);
                 Assert.AreEqual(configReaderValue, reader.IsDebuggingEnabled());
             }
 
@@ -117,7 +118,7 @@ namespace SquishIt.Tests
         [TestCase(AspNetHostingPermissionLevel.None)]
         public void IgnoreMachineConfigReader_Untrusted(AspNetHostingPermissionLevel permissionLevel)
         {
-            var httpContext = new Mock<HttpContextBase>(MockBehavior.Strict);
+            var httpContext = new Mock<IHttpContext>(MockBehavior.Strict);
             var trustLevel = new Mock<ITrustLevel>(MockBehavior.Strict);
 
             httpContext.SetupGet(hc => hc.IsDebuggingEnabled).Returns(true);
@@ -129,7 +130,7 @@ namespace SquishIt.Tests
             using(new TrustLevelScope(trustLevel.Object))
             using(new HttpContextScope(httpContext.Object))
             {
-                var reader = new DebugStatusReader(machineConfigReader.Object);
+                var reader = new DebugStatusReader(machineConfigReader.Object, httpContext.Object);
                 Assert.IsTrue(reader.IsDebuggingEnabled());
             }
 
@@ -140,7 +141,7 @@ namespace SquishIt.Tests
         [TestCase(AspNetHostingPermissionLevel.High)]
         public void UseMachineConfigReader_Trusted(AspNetHostingPermissionLevel permissionLevel)
         {
-            var httpContext = new Mock<HttpContextBase>(MockBehavior.Strict);
+            var httpContext = new Mock<IHttpContext>(MockBehavior.Strict);
             var trustLevel = new Mock<ITrustLevel>(MockBehavior.Strict);
             var machineConfigReader = new Mock<IMachineConfigReader>(MockBehavior.Strict);
 
@@ -151,7 +152,7 @@ namespace SquishIt.Tests
             using(new TrustLevelScope(trustLevel.Object))
             using(new HttpContextScope(httpContext.Object))
             {
-                var reader = new DebugStatusReader(machineConfigReader.Object);
+                var reader = new DebugStatusReader(machineConfigReader.Object, httpContext.Object);
                 Assert.IsFalse(reader.IsDebuggingEnabled());
             }
 

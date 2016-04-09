@@ -1,4 +1,4 @@
-﻿using System;
+﻿using System.Diagnostics.Contracts;
 using System.Web;
 using Moq;
 using NUnit.Framework;
@@ -11,16 +11,19 @@ namespace SquishIt.Tests
 {
     public abstract class ConfigurationTests
     {
-        private readonly Configuration configuration;
+        private readonly Configuration _configuration;
+        private readonly IDebugStatusReader _debugStatusReader;
 
-        protected ConfigurationTests(Configuration configuration)
+        protected ConfigurationTests(Configuration configuration, IDebugStatusReader debugStatusReader)
         {
-            if (configuration == null)
-            {
-                throw new ArgumentNullException(nameof(configuration));
-            }
+            Contract.Requires(configuration == null);
+            Contract.Requires(debugStatusReader == null);
 
-            this.configuration = configuration;
+            Contract.Ensures(_configuration == null);
+            Contract.Ensures(_debugStatusReader == null);
+
+            _configuration = configuration;
+            _debugStatusReader = debugStatusReader;
         }
 
         [Test]
@@ -30,23 +33,23 @@ namespace SquishIt.Tests
             hasher.Setup(h => h.GetHash(It.IsAny<string>()))
                 .Returns("pizza");
 
-            configuration.UseHasher(hasher.Object);
+            _configuration.UseHasher(hasher.Object);
 
             var trustLevel = new Mock<ITrustLevel>();
             trustLevel.SetupGet(tl => tl.CurrentTrustLevel).Returns(AspNetHostingPermissionLevel.Unrestricted); //globally configured hasher is used another 2 times in high / full trust when obtaining mutex
 
-            using(new ConfigurationScope(configuration))
+            using(new ConfigurationScope(_configuration))
             using(new TrustLevelScope(trustLevel.Object))
             {
                 FilePathMutexProvider.instance = null;
 
-                var jsTag = Bundle.JavaScript()
+                var jsTag = Bundle.JavaScript(_debugStatusReader)
                                 .AddString("test")
                                 .Render("configured-hash.js");
 
                 Assert.True(jsTag.Contains("?r=pizza"));
 
-                var cssTag = Bundle.Css()
+                var cssTag = Bundle.Css(_debugStatusReader)
                                    .AddString("test")
                                    .Render("configured-hash.css");
 

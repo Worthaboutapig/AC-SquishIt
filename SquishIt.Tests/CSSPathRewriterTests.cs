@@ -10,13 +10,22 @@ namespace SquishIt.Tests
 {
     public abstract class CSSPathRewriterTests : WebTests
     {
+        private readonly IPathTranslator _pathTranslator;
+
         //TODO: mock path translators
-        protected CSSPathRewriterTests(IHttpUtility httpUtility) : base(httpUtility)
+        protected CSSPathRewriterTests(IHttpUtility httpUtility, IPathTranslator pathTranslator) : base(httpUtility)
         {
             if (httpUtility == null)
             {
                 throw new ArgumentNullException("httpUtility");
             }
+
+            if (pathTranslator == null)
+            {
+                throw new ArgumentNullException("pathTranslator");
+            }
+
+            _pathTranslator = pathTranslator;
         }
 
         [Test]
@@ -37,7 +46,7 @@ namespace SquishIt.Tests
             string sourceFile = TestUtilities.PreparePath(@"C:\somepath\somesubpath\myfile.css");
             string targetFile = TestUtilities.PreparePath(@"C:\somepath\someothersubpath\evendeeper\output.css");
 
-            string result = CSSPathRewriter.RewriteCssPaths(targetFile, sourceFile, css, cssAssetsFileHasher, new PathTranslator());
+            string result = CSSPathRewriter.RewriteCssPaths(targetFile, sourceFile, css, cssAssetsFileHasher, _pathTranslator);
 
             string expected =
                 @"
@@ -69,7 +78,7 @@ namespace SquishIt.Tests
             string sourceFile = TestUtilities.PreparePath(@"C:\somepath\somesubpath\myfile.css");
             string targetFile = TestUtilities.PreparePath(@"C:\somepath\someothersubpath\output.css");
 
-            string result = CSSPathRewriter.RewriteCssPaths(targetFile, sourceFile, css, cssAssetsFileHasher, new PathTranslator());
+            string result = CSSPathRewriter.RewriteCssPaths(targetFile, sourceFile, css, cssAssetsFileHasher, _pathTranslator);
 
             string expected =
                 @"
@@ -99,7 +108,7 @@ namespace SquishIt.Tests
             string sourceFile = TestUtilities.PreparePath(@"C:\somepath\somesubpath\someothersubpath\myfile.css");
             string targetFile = TestUtilities.PreparePath(@"C:\somepath\somesubpath\myfile.css");
 
-            string result = CSSPathRewriter.RewriteCssPaths(targetFile, sourceFile, css, cssAssetsFileHasher, new PathTranslator());
+            string result = CSSPathRewriter.RewriteCssPaths(targetFile, sourceFile, css, cssAssetsFileHasher, _pathTranslator);
 
             string expected =
                 @"
@@ -126,7 +135,7 @@ namespace SquishIt.Tests
             string sourceFile = TestUtilities.PreparePath(@"C:\somepath\somesubpath\someothersubpath\myfile.css");
             string targetFile = TestUtilities.PreparePath(@"C:\somepath\somesubpath\myfile.css");
 
-            string result = CSSPathRewriter.RewriteCssPaths(targetFile, sourceFile, css, cssAssetsFileHasher, new PathTranslator());
+            string result = CSSPathRewriter.RewriteCssPaths(targetFile, sourceFile, css, cssAssetsFileHasher, _pathTranslator);
 
             string expected =
                 @"
@@ -154,7 +163,7 @@ namespace SquishIt.Tests
                                                     ";
             string sourceFile = TestUtilities.PreparePath(@"C:\somepath\somesubpath\myfile.css");
             string targetFile = TestUtilities.PreparePath(@"C:\somepath\someothersubpath\evendeeper\output.css");
-            string result = CSSPathRewriter.RewriteCssPaths(targetFile, sourceFile, css, cssAssetsFileHasher, new PathTranslator());
+            string result = CSSPathRewriter.RewriteCssPaths(targetFile, sourceFile, css, cssAssetsFileHasher, _pathTranslator);
 
             string expected =
                 @"
@@ -185,7 +194,7 @@ namespace SquishIt.Tests
                                                     ";
             string sourceFile = TestUtilities.PreparePath(@"C:\somepath\somesubpath\myfile.css");
             string targetFile = TestUtilities.PreparePath(@"C:\somepath\output.css");
-            string result = CSSPathRewriter.RewriteCssPaths(targetFile, sourceFile, css, cssAssetsFileHasher, new PathTranslator());
+            string result = CSSPathRewriter.RewriteCssPaths(targetFile, sourceFile, css, cssAssetsFileHasher, _pathTranslator);
 
             string expected =
                 @"
@@ -216,7 +225,7 @@ namespace SquishIt.Tests
                                                     ";
             string sourceFile = TestUtilities.PreparePath(@"C:\somepath\somesubpath\myfile.css");
             string targetFile = TestUtilities.PreparePath(@"C:\somepath\someothersubpath\evendeeper\output.css");
-            string result = CSSPathRewriter.RewriteCssPaths(targetFile, sourceFile, css, cssAssetsFileHasher, new PathTranslator());
+            string result = CSSPathRewriter.RewriteCssPaths(targetFile, sourceFile, css, cssAssetsFileHasher, _pathTranslator);
 
             string expected =
                 @"
@@ -247,7 +256,7 @@ namespace SquishIt.Tests
                                                     ";
             string sourceFile = TestUtilities.PreparePath(@"C:\somepath\somesubpath\myfile.css");
             string targetFile = TestUtilities.PreparePath(@"C:\somepath\output.css");
-            string result = CSSPathRewriter.RewriteCssPaths(targetFile, sourceFile, css, cssAssetsFileHasher, new PathTranslator());
+            string result = CSSPathRewriter.RewriteCssPaths(targetFile, sourceFile, css, cssAssetsFileHasher, _pathTranslator);
 
             string expected =
                 @"
@@ -278,7 +287,7 @@ namespace SquishIt.Tests
                                                     ";
             string sourceFile = TestUtilities.PreparePath(@"C:\somepath\somesubpath\myfile.css");
             string targetFile = TestUtilities.PreparePath(@"C:\somepath\output.css");
-            string result = CSSPathRewriter.RewriteCssPaths(targetFile, sourceFile, css, cssAssetsFileHasher, new PathTranslator());
+            string result = CSSPathRewriter.RewriteCssPaths(targetFile, sourceFile, css, cssAssetsFileHasher, _pathTranslator);
 
             string expected =
                 @"
@@ -309,7 +318,7 @@ namespace SquishIt.Tests
                                                     ";
             string sourceFile = TestUtilities.PreparePath(@"C:\somepath\somesubpath\myfile.css");
             string targetFile = TestUtilities.PreparePath(@"C:\somepath\output.css");
-            string result = CSSPathRewriter.RewriteCssPaths(targetFile, sourceFile, css, cssAssetsFileHasher, new PathTranslator());
+            string result = CSSPathRewriter.RewriteCssPaths(targetFile, sourceFile, css, cssAssetsFileHasher, _pathTranslator);
 
             string expected =
                 @"
@@ -340,7 +349,7 @@ namespace SquishIt.Tests
                                                     ";
             string sourceFile = TestUtilities.PreparePath(@"C:\somepath\somesubpath\myfile.css");
             string targetFile = TestUtilities.PreparePath(@"C:\somepath\output.css");
-            string result = CSSPathRewriter.RewriteCssPaths(targetFile, sourceFile, css, cssAssetsFileHasher, new PathTranslator());
+            string result = CSSPathRewriter.RewriteCssPaths(targetFile, sourceFile, css, cssAssetsFileHasher, _pathTranslator);
 
             string expected =
                 @"
@@ -375,7 +384,7 @@ namespace SquishIt.Tests
 
             //concrete result doesn't matter here (since input isn't valid)
             //the only important thing is that it shouldn't throw exceptions
-            Assert.DoesNotThrow(() => CSSPathRewriter.RewriteCssPaths(targetFile, sourceFile, css, cssAssetsFileHasher, new PathTranslator()));
+            Assert.DoesNotThrow(() => CSSPathRewriter.RewriteCssPaths(targetFile, sourceFile, css, cssAssetsFileHasher, _pathTranslator));
         }
 
         [Test]
@@ -399,7 +408,7 @@ namespace SquishIt.Tests
 
             //concrete result doesn't matter here (since input isn't valid)
             //the only important thing is that it shouldn't throw exceptions
-            Assert.DoesNotThrow(() => CSSPathRewriter.RewriteCssPaths(targetFile, sourceFile, css, cssAssetsFileHasher, new PathTranslator()));
+            Assert.DoesNotThrow(() => CSSPathRewriter.RewriteCssPaths(targetFile, sourceFile, css, cssAssetsFileHasher, _pathTranslator));
         }
 
         [Test]
@@ -418,7 +427,7 @@ namespace SquishIt.Tests
                                                     ";
             string sourceFile = TestUtilities.PreparePath(@"C:\somepath\somesubpath\myfile.css");
             string targetFile = TestUtilities.PreparePath(@"C:\somepath\someothersubpath\evendeeper\output.css");
-            string result = CSSPathRewriter.RewriteCssPaths(targetFile, sourceFile, css, cssAssetsFileHasher, new PathTranslator());
+            string result = CSSPathRewriter.RewriteCssPaths(targetFile, sourceFile, css, cssAssetsFileHasher, _pathTranslator);
 
             string expected =
                 @"
@@ -445,7 +454,7 @@ namespace SquishIt.Tests
                                                     ";
             string sourceFile = TestUtilities.PreparePath(@"C:\somepath\somesubpath\myfile.css");
             string targetFile = TestUtilities.PreparePath(@"C:\somepath\someothersubpath\evendeeper\output.css");
-            string result = CSSPathRewriter.RewriteCssPaths(targetFile, sourceFile, css, cssAssetsFileHasher, new PathTranslator());
+            string result = CSSPathRewriter.RewriteCssPaths(targetFile, sourceFile, css, cssAssetsFileHasher, _pathTranslator);
 
             string expected =
                 @"
@@ -468,7 +477,7 @@ namespace SquishIt.Tests
                                                     ";
             string sourceFile = TestUtilities.PreparePath(@"C:\somepath\somesubpath\myfile.css");
             string targetFile = TestUtilities.PreparePath(@"C:\somepath\someothersubpath\evendeeper\output.css");
-            string result = CSSPathRewriter.RewriteCssPaths(targetFile, sourceFile, css, cssAssetsFileHasher, new PathTranslator());
+            string result = CSSPathRewriter.RewriteCssPaths(targetFile, sourceFile, css, cssAssetsFileHasher, _pathTranslator);
 
             string expected =
                 @"
@@ -493,7 +502,7 @@ font-style: normal;
             var sourceFile = TestUtilities.PreparePath(@"C:\somepath\somesubpath\myFile.css");
             var destinationFile = TestUtilities.PreparePath(@"C:\somepath\somesubpath\myRewrittenFile.css");
 
-            var result = CSSPathRewriter.RewriteCssPaths(destinationFile, sourceFile, css, null, new PathTranslator());
+            var result = CSSPathRewriter.RewriteCssPaths(destinationFile, sourceFile, css, null, _pathTranslator);
 
             Assert.AreEqual(css, result);
         }
@@ -512,7 +521,7 @@ font-style: normal;
             var sourceFile = TestUtilities.PreparePath(@"C:\somepath\somesubpath\myFile.css");
             var destinationFile = TestUtilities.PreparePath(@"C:\somepath\somesubpath\myRewrittenFile.css");
 
-            var result = CSSPathRewriter.RewriteCssPaths(destinationFile, sourceFile, css, null, new PathTranslator(), asImport: true);
+            var result = CSSPathRewriter.RewriteCssPaths(destinationFile, sourceFile, css, null, _pathTranslator, asImport: true);
 
             Assert.AreEqual(css.Replace("../", "squishit://../"), result);
         }
@@ -526,7 +535,7 @@ font-style: normal;
             var sourceFile = TestUtilities.PreparePath(@"C:\somepath\myFile.css");
             var destinationFile = TestUtilities.PreparePath(@"C:\somepath\somesubpath\myRewrittenFile.css");
 
-            var result = CSSPathRewriter.RewriteCssPaths(destinationFile, sourceFile, css, null, new PathTranslator());
+            var result = CSSPathRewriter.RewriteCssPaths(destinationFile, sourceFile, css, null, _pathTranslator);
 
             Assert.AreEqual(css, result);
         }
@@ -540,7 +549,7 @@ font-style: normal;
             var sourceFile = TestUtilities.PreparePath(@"C:\somepath\myFile.css");
             var destinationFile = TestUtilities.PreparePath(@"C:\somepath\somesubpath\myRewrittenFile.css");
 
-            var result = CSSPathRewriter.RewriteCssPaths(destinationFile, sourceFile, css, null, new PathTranslator());
+            var result = CSSPathRewriter.RewriteCssPaths(destinationFile, sourceFile, css, null, _pathTranslator);
 
             Assert.AreEqual(css, result);
         }
@@ -556,7 +565,7 @@ font-style: normal;
             var sourceFile = TestUtilities.PreparePath(@"C:\X\Themes\Metro\Content\Styles\myFile.css");
             var destinationFile = TestUtilities.PreparePath(@"C:\X\Content\cache\combined.css");
 
-            var result = CSSPathRewriter.RewriteCssPaths(destinationFile, sourceFile, css, null, new PathTranslator());
+            var result = CSSPathRewriter.RewriteCssPaths(destinationFile, sourceFile, css, null, _pathTranslator);
 
             Assert.AreEqual(expected, result);
         }
@@ -571,7 +580,7 @@ font-style: normal;
             var sourceFile = TestUtilities.PreparePath(@"C:\X\Themes\Metro\Content\Styles\myFile.css");
             var destinationFile = TestUtilities.PreparePath(@"C:\X\Themes\combined.css");
 
-            var result = CSSPathRewriter.RewriteCssPaths(destinationFile, sourceFile, css, null, new PathTranslator());
+            var result = CSSPathRewriter.RewriteCssPaths(destinationFile, sourceFile, css, null, _pathTranslator);
 
             Assert.AreEqual(expected, result);
         }
@@ -586,7 +595,7 @@ font-style: normal;
             var sourceFile = TestUtilities.PreparePath(@"C:\X\Themes\Metro\Content\myFile.css");
             var destinationFile = TestUtilities.PreparePath(@"C:\X\Content\cache\css\combined.css");
 
-            var result = CSSPathRewriter.RewriteCssPaths(destinationFile, sourceFile, css, null, new PathTranslator());
+            var result = CSSPathRewriter.RewriteCssPaths(destinationFile, sourceFile, css, null, _pathTranslator);
 
             Assert.AreEqual(expected, result);
         }
@@ -601,7 +610,7 @@ font-style: normal;
             var sourceFile = TestUtilities.PreparePath(@"C:\X\Themes\Metro\Content\Styles\myFile.css");
             var destinationFile = TestUtilities.PreparePath(@"C:\X\Content\x\y\z\cache\combined.css");
 
-            var result = CSSPathRewriter.RewriteCssPaths(destinationFile, sourceFile, css, null, new PathTranslator());
+            var result = CSSPathRewriter.RewriteCssPaths(destinationFile, sourceFile, css, null, _pathTranslator);
 
             Assert.AreEqual(expected, result);
         }
@@ -616,7 +625,7 @@ font-style: normal;
             var sourceFile = TestUtilities.PreparePath(@"C:\X\Themes\Metro\Content\Styles\myFile.css");
             var destinationFile = TestUtilities.PreparePath(@"C:\X\Themes\Metro\Content\Styles\output\combined.css");
 
-            var result = CSSPathRewriter.RewriteCssPaths(destinationFile, sourceFile, css, null, new PathTranslator());
+            var result = CSSPathRewriter.RewriteCssPaths(destinationFile, sourceFile, css, null, _pathTranslator);
 
             Assert.AreEqual(expected, result);
         }
@@ -631,7 +640,7 @@ font-style: normal;
             var sourceFile = TestUtilities.PreparePath(@"C:\somepath\myFile.css");
             var destinationFile = TestUtilities.PreparePath(@"C:\somepath\somesubpath\myRewrittenFile.css");
 
-            var result = CSSPathRewriter.RewriteCssPaths(destinationFile, sourceFile, css, null, new PathTranslator());
+            var result = CSSPathRewriter.RewriteCssPaths(destinationFile, sourceFile, css, null, _pathTranslator);
 
             Assert.AreEqual(@"test", result);
         }
@@ -654,7 +663,7 @@ font-style: normal;
                                                     ";
             string sourceFile = TestUtilities.PreparePath(@"C:\somepath\myfile.css");
             string targetFile = TestUtilities.PreparePath(@"C:\somepath\output.css");
-            string result = CSSPathRewriter.RewriteCssPaths(targetFile, sourceFile, css, cssAssetsFileHasher, new PathTranslator());
+            string result = CSSPathRewriter.RewriteCssPaths(targetFile, sourceFile, css, cssAssetsFileHasher, _pathTranslator);
 
             string expected =
                 @"

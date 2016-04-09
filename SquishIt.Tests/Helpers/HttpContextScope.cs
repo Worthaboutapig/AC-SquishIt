@@ -1,18 +1,21 @@
 ﻿using System;
-using System.Web;
 
 namespace SquishIt.Tests.Helpers
 {
+    using Framework.Web;
+
     public class HttpContextScope : IDisposable
     {
-        public HttpContextScope(HttpContextBase context)
+        private IHttpContext _httpContext;
+
+        public HttpContextScope(IHttpContext httpContext)
         {
-            Framework.HttpContext.contextBase = context;
+            _httpContext = httpContext;
         }
 
         public void Dispose()
         {
-            Framework.HttpContext.contextBase = null;
+	        _httpContext = null;
         }
     }
 }

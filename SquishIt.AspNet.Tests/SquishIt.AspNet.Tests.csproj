@@ -33,9 +33,15 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="AssetsFileHasherTests.cs" />
+    <Compile Include="CoffeeScriptTests.cs" />
     <Compile Include="ConfigurationTests.cs" />
     <Compile Include="CSSPathRewriterTests.cs" />
+    <Compile Include="HoganTests.cs" />
+    <Compile Include="JavaScriptBundleTests.cs" />
+    <Compile Include="MultipleWorkerProcessesTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ScriptPreprocessorPipelineTests.cs" />
+    <Compile Include="TestConfiguration.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\SquishIt.AspNet\SquishIt.AspNet.csproj">

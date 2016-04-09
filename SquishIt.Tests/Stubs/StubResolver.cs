@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace SquishIt.Tests.Stubs
 {
-    public class StubResolver : IResolver
+    public class StubResolver : IFolderResolver
     {
         string _pathToResolveTo;
         string[] _directoryContents;
@@ -15,12 +15,12 @@ namespace SquishIt.Tests.Stubs
             _directoryContents = directoryContents;
         }
 
-        public string Resolve(string file)
+        public string ResolveFilename(string filePath)
         {
             return _pathToResolveTo;
         }
 
-        public IEnumerable<string> ResolveFolder(string path, bool recursive, string debugExtension, IEnumerable<string> allowedFileExtensions, IEnumerable<string> disallowedFileExtensions)
+        public IEnumerable<string> ResolveFilenames(string path, bool recursive, string debugExtension, IEnumerable<string> allowedFileExtensions, IEnumerable<string> disallowedFileExtensions)
         {
             return _directoryContents
                 .Where(
@@ -34,7 +34,7 @@ namespace SquishIt.Tests.Stubs
                 .ToArray();
         }
 
-        public virtual bool IsDirectory(string path)
+        public virtual bool IsFolder(string path)
         {
             return _directoryContents != null;
         }
@@ -46,12 +46,12 @@ namespace SquishIt.Tests.Stubs
                 .Select(s => "." + s.ToUpperInvariant());
         }
 
-        public static IResolver ForDirectory(string[] files)
+        public static IFolderResolver ForDirectory(string[] files)
         {
             return new StubResolver(null, files);
         }
 
-        public static IResolver ForFile(string file)
+        public static IFolderResolver ForFile(string file)
         {
             return new StubResolver(file, null);
         }

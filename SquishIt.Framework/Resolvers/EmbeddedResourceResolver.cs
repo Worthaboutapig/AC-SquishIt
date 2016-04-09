@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Linq;
 using System.IO;
 using System.Reflection;
@@ -7,15 +8,27 @@ using SquishIt.Framework.Utilities;
 
 namespace SquishIt.Framework.Resolvers
 {
-    public abstract class EmbeddedResourceResolver : IResolver
+    public abstract class EmbeddedResourceResolver : IFileResolver
     {
-        private readonly ITempPathProvider tempPathProvider = Configuration.Instance.DefaultTempPathProvider();
-
-        protected abstract string CalculateResourceName(string assemblyName, string resourceName); 
-
-        public string Resolve(string file)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="T:System.Object"/> class.
+        /// </summary>
+        protected EmbeddedResourceResolver(ITempPathProvider tempPathProvider)
         {
-            var split = file.Split(new[] { "://" }, StringSplitOptions.None);
+            Contract.Requires(tempPathProvider != null);
+
+            Contract.Ensures(_tempPathProvider != null);
+
+            _tempPathProvider = tempPathProvider;
+        }
+
+        private readonly ITempPathProvider _tempPathProvider;
+
+        protected abstract string CalculateResourceName(string assemblyName, string resourceName);
+
+        public string ResolveFilename(string filePath)
+        {
+            var split = filePath.Split(new[] {"://"}, StringSplitOptions.None);
             var assemblyName = split.ElementAt(0);
             var assembly = AppDomain.CurrentDomain.GetAssemblies().SingleOrDefault(x => x.GetName().Name == assemblyName);
 
@@ -28,56 +41,39 @@ namespace SquishIt.Framework.Resolvers
             {
                 return resolved;
             }
-            return ResolveFile(file, assembly, resourceName, filename);
+
+            var fileName = ResolveFile(filePath, assembly, resourceName, filename);
+
+            return fileName;
         }
 
-        private string ResolveFile(string file, Assembly assembly, string resourceName, string filename)
+        private string ResolveFile(string filePath, Assembly assembly, string resourceName, string filename)
         {
             using (var stream = assembly.GetManifestResourceStream(resourceName))
             {
                 if (stream == null)
-                    throw new InvalidOperationException(String.Format("Embedded resource not found: {0}", file));
+                {
+                    throw new InvalidOperationException(string.Format("Embedded resource not found: {0}", filePath));
+                }
 
                 string contents;
+                // Read the file contents from the embedded resource...
                 using (var sr = new StreamReader(stream))
                 {
                     contents = sr.ReadToEnd();
                 }
-                string fileName = tempPathProvider.ForFile() + "-" + filename;
+                var fileName = _tempPathProvider.ForFile() + "-" + filename;
 
+                // ...and write it to the temporary file.
                 using (var sw = new StreamWriter(fileName))
                 {
                     sw.Write(contents);
                 }
+
                 TempFileResolutionCache.Add(resourceName, fileName);
+
                 return fileName;
             }
-        }
-
-        public IEnumerable<string> ResolveFolder(string path, bool recursive, string debugFileExtension, IEnumerable<string> allowedExtensions, IEnumerable<string> disallowedExtensions)
-        {
-            throw new NotImplementedException("Adding entire directories only supported by FileSystemResolver.");
-        }
-
-        public virtual bool IsDirectory(string path)
-        {
-            return false;
-        }
-    }
-
-    public class StandardEmbeddedResourceResolver : EmbeddedResourceResolver
-    {
-        protected override string CalculateResourceName(string assemblyName, string resourceName)
-        {
-            return assemblyName + "." + resourceName;
-        }
-    }
-
-    public class RootEmbeddedResourceResolver : EmbeddedResourceResolver
-    {
-        protected override string CalculateResourceName(string assemblyName, string resourceName)
-        {
-            return resourceName;
         }
     }
 }

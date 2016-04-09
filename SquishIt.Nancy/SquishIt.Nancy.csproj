@@ -32,7 +32,10 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Configuration.cs" />
+    <Compile Include="DefaultConfiguration.cs" />
+    <Compile Include="DefaultPathTranslator.cs" />
+    <Compile Include="VirtualPathUtilityWrapper.cs" />
+    <Compile Include="Web\HttpContext.cs" />
     <Compile Include="Web\HttpUtility.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -48,6 +51,7 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Configuration" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

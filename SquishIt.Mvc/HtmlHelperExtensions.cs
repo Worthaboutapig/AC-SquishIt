@@ -3,19 +3,26 @@ using System.Web.Mvc;
 using System.Web.WebPages;
 using SquishIt.Framework.CSS;
 using SquishIt.Framework.JavaScript;
+using SquishIt.Framework.Utilities;
 
 namespace SquishIt.Mvc
 {
     public static class HtmlHelperExtensions
     {
-        public static CSSBundle BundleCss(this HtmlHelper html)
+        private static readonly IMachineConfigReader _machineConfigReader = new MachineConfigReader();
+
+        public static CSSBundle BundleCss(this HtmlHelper html, IDebugStatusReader debugStatusReader = null)
         {
-            return new CSSBundle();
+            debugStatusReader = debugStatusReader ?? new DebugStatusReader(_machineConfigReader, new AspNet.Web.HttpContext(HttpContext.Current));
+            var bundleCss = new CSSBundle(debugStatusReader);
+
+            return bundleCss;
         }
 
-        public static JavaScriptBundle BundleJavaScript(this HtmlHelper html)
+        public static JavaScriptBundle BundleJavaScript(this HtmlHelper html, IDebugStatusReader debugStatusReader = null)
         {
-            return new JavaScriptBundle();
+            debugStatusReader = debugStatusReader ?? new DebugStatusReader(_machineConfigReader, new AspNet.Web.HttpContext(HttpContext.Current));
+            return new JavaScriptBundle(debugStatusReader);
         }
 
         public static string ViewName(this HtmlHelper html)

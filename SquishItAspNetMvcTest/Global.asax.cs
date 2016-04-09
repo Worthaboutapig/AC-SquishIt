@@ -2,12 +2,11 @@
 using System.Web.Mvc;
 using System.Web.Routing;
 using SquishIt.Framework;
+using SquishIt.Framework.Utilities;
 
 namespace SquishItAspNetMvcTest
 {
-    // Note: For instructions on enabling IIS6 or IIS7 classic mode, 
-    // visit http://go.microsoft.com/?LinkId=9394801
-
+    // Note: For instructions on enabling IIS6 or IIS7 classic mode, visit http://go.microsoft.com/?LinkId=9394801
     public class MvcApplication : HttpApplication
     {
         public static void RegisterGlobalFilters(GlobalFilterCollection filters)
@@ -22,29 +21,35 @@ namespace SquishItAspNetMvcTest
             routes.MapRoute(
                 "Default", // Route name
                 "{controller}/{action}/{id}", // URL with parameters
-                new { controller = "Home", action = "Index", id = UrlParameter.Optional } // Parameter defaults
-            );
-
+                new // Parameter defaults
+                {
+                    controller = "Home",
+                    action = "Index",
+                    id = UrlParameter.Optional
+                });
         }
 
         protected void Application_Start()
         {
+            var machineConfigReader = new MachineConfigReader();
+            var debugStatusReader = new DebugStatusReader(machineConfigReader, new SquishIt.AspNet.Web.HttpContext(HttpContext.Current));
+
             AreaRegistration.RegisterAllAreas();
 
             RegisterGlobalFilters(GlobalFilters.Filters);
             RegisterRoutes(RouteTable.Routes);
 
-            Bundle.JavaScript()
-                .Add("/assets/js/jquery_1.7.2.js")
-                .Add("/assets/js/minifyjs_test.js")
-                .ForceRelease()
-                .AsNamed("RenderNamedTest", "/output/rendernamed_test_output.js");
+            Bundle.JavaScript(debugStatusReader)
+                  .Add("/assets/js/jquery_1.7.2.js")
+                  .Add("/assets/js/minifyjs_test.js")
+                  .ForceRelease()
+                  .AsNamed("RenderNamedTest", "/output/rendernamed_test_output.js");
 
-            Bundle.JavaScript()
-                .Add("assets/js/jquery_1.7.2.js")
-                .Add("/assets/js/minifyjs_test.js")
-                .ForceRelease()
-                .AsCached("render-cached", "~/AssetCache/Js/render-cached");
+            Bundle.JavaScript(debugStatusReader)
+                  .Add("assets/js/jquery_1.7.2.js")
+                  .Add("/assets/js/minifyjs_test.js")
+                  .ForceRelease()
+                  .AsCached("render-cached", "~/AssetCache/Js/render-cached");
         }
     }
 }

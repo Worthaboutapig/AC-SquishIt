@@ -14,13 +14,14 @@ using SquishIt.Framework.Resolvers;
 using SquishIt.Framework.Utilities;
 using SquishIt.Tests.Helpers;
 using SquishIt.Tests.Stubs;
-using HttpContext = SquishIt.Framework.HttpContext;
 using SquishIt.Framework.Web;
+using System.Diagnostics.Contracts;
+using SquishIt.Framework;
 
 namespace SquishIt.Tests
 {
     [TestFixture]
-    public abstract class CSSBundleTests : WebTests
+    public abstract class CSSBundleTests
     {
         string css = TestUtilities.NormalizeLineEndings(@" li {
                                     margin-bottom:0.1em;
@@ -56,22 +57,48 @@ namespace SquishIt.Tests
         string minifiedCss2 =
             "li{margin-bottom:.1em;margin-left:0;margin-top:.1em}th{font-weight:normal;vertical-align:bottom}";
 
-        CSSBundleFactory cssBundleFactory;
+        CssBundleFactory cssBundleFactory;
         IHasher stubHasher;
+        private readonly IHttpUtility _httpUtility;
+        private readonly string _baseOutputHref;
+        private readonly IPathTranslator _pathTranslator;
+        private readonly FileSystemResolver _fileSystemResolver;
+        private readonly HttpResolver _httpResolver;
+        private readonly RootEmbeddedResourceResolver _rootEmbeddedResourceResolver;
+        private readonly StandardEmbeddedResourceResolver _standardEmbeddedResourceResolver;
 
-        protected CSSBundleTests(IHttpUtility httpUtility) : base(httpUtility)
+        protected CSSBundleTests(IHttpUtility httpUtility, string baseOutputHref, IPathTranslator pathTranslator, FileSystemResolver fileSystemResolver, HttpResolver httpResolver, RootEmbeddedResourceResolver rootEmbeddedResourceResolver, StandardEmbeddedResourceResolver standardEmbeddedResourceResolver)
         {
-            if (httpUtility == null)
-            {
-                throw new ArgumentNullException("httpUtility");
-            }
+            Contract.Requires(httpUtility != null);
+            Contract.Requires(baseOutputHref != null);
+            Contract.Requires(pathTranslator != null);
+            Contract.Requires(fileSystemResolver != null);
+            Contract.Requires(httpResolver != null);
+            Contract.Requires(rootEmbeddedResourceResolver != null);
+            Contract.Requires(standardEmbeddedResourceResolver != null);
+
+            Contract.Ensures(_httpUtility != null);
+            Contract.Ensures(_baseOutputHref != null);
+            Contract.Ensures(_pathTranslator != null);
+            Contract.Ensures(_fileSystemResolver != null);
+            Contract.Ensures(_httpResolver != null);
+            Contract.Ensures(_rootEmbeddedResourceResolver != null);
+            Contract.Ensures(_standardEmbeddedResourceResolver != null);
+
+            _httpUtility = httpUtility;
+            _baseOutputHref = baseOutputHref;
+            _pathTranslator = pathTranslator;
+            _fileSystemResolver = fileSystemResolver;
+            _httpResolver = httpResolver;
+            _rootEmbeddedResourceResolver = rootEmbeddedResourceResolver;
+            _standardEmbeddedResourceResolver = standardEmbeddedResourceResolver;
         }
 
         [SetUp]
         public void Setup()
         {
             stubHasher = new StubHasher("hash");
-            cssBundleFactory = new CSSBundleFactory(httpUtility)
+            cssBundleFactory = new CssBundleFactory(_httpUtility, _baseOutputHref, _pathTranslator, _fileSystemResolver, _httpResolver, _rootEmbeddedResourceResolver, _standardEmbeddedResourceResolver)
                 .WithHasher(stubHasher);
         }
 
@@ -161,15 +188,15 @@ namespace SquishIt.Tests
             var file1 = TestUtilities.PrepareRelativePath(path + "\\file1.css");
             var file2 = TestUtilities.PrepareRelativePath(path2 + "\\file2.css");
 
-            var resolver = new Mock<IResolver>(MockBehavior.Strict);
-            resolver.Setup(r => r.IsDirectory(It.IsAny<string>())).Returns(true);
+            var resolver = new Mock<IFolderResolver>(MockBehavior.Strict);
+            resolver.Setup(r => r.IsFolder(It.IsAny<string>())).Returns(true);
 
             resolver.Setup(r =>
-                r.ResolveFolder(TestUtilities.PrepareRelativePath(path), It.IsAny<bool>(), It.IsAny<string>(), It.IsAny<IEnumerable<string>>(), It.IsAny<IEnumerable<string>>()))
+                r.ResolveFilenames(TestUtilities.PrepareRelativePath(path), It.IsAny<bool>(), It.IsAny<string>(), It.IsAny<IEnumerable<string>>(), It.IsAny<IEnumerable<string>>()))
                 .Returns(new[] { file1 });
 
             resolver.Setup(r =>
-                r.ResolveFolder(TestUtilities.PrepareRelativePath(path2), It.IsAny<bool>(), It.IsAny<string>(), It.IsAny<IEnumerable<string>>(), It.IsAny<IEnumerable<string>>()))
+                r.ResolveFilenames(TestUtilities.PrepareRelativePath(path2), It.IsAny<bool>(), It.IsAny<string>(), It.IsAny<IEnumerable<string>>(), It.IsAny<IEnumerable<string>>()))
                 .Returns(new[] { file2 });
 
             using(new ResolverFactoryScope(typeof(FileSystemResolver).FullName, resolver.Object))
@@ -1178,7 +1205,7 @@ background:url(images/button-loader.gif) #ccc;
             var hrColor = "hr {color:sienna;}";
             var p = "p {margin-left:20px;}";
 
-            var tag = new CSSBundleFactory(httpUtility)
+            var tag = new CssBundleFactory(_httpUtility, _baseOutputHref, _pathTranslator, _fileSystemResolver, _httpResolver, _rootEmbeddedResourceResolver, _standardEmbeddedResourceResolver)
                 .WithDebuggingEnabled(true)
                 .Create()
                 .AddString(css)
@@ -1204,7 +1231,7 @@ background:url(images/button-loader.gif) #ccc;
 
             var writerFactory = new StubFileWriterFactory();
 
-            var tag = new CSSBundleFactory(httpUtility)
+            var tag = new CssBundleFactory(_httpUtility, _baseOutputHref, _pathTranslator, _fileSystemResolver, _httpResolver, _rootEmbeddedResourceResolver, _standardEmbeddedResourceResolver)
                 .WithFileReaderFactory(readerFactory)
                 .WithFileWriterFactory(writerFactory)
                 .WithDebuggingEnabled(false)
@@ -1235,7 +1262,7 @@ background:url(images/button-loader.gif) #ccc;
 
             var writerFactory = new StubFileWriterFactory();
 
-            var tag = new CSSBundleFactory(httpUtility)
+            var tag = new CssBundleFactory(_httpUtility, _baseOutputHref, _pathTranslator, _fileSystemResolver, _httpResolver, _rootEmbeddedResourceResolver, _standardEmbeddedResourceResolver)
                 .WithFileReaderFactory(readerFactory)
                 .WithFileWriterFactory(writerFactory)
                 .WithDebuggingEnabled(true)
@@ -1258,7 +1285,7 @@ background:url(images/button-loader.gif) #ccc;
             var hrColor = "hr {color:sienna;}";
             var p = "p {margin-left:20px;}";
 
-            var tag = new CSSBundleFactory(httpUtility)
+            var tag = new CssBundleFactory(_httpUtility, _baseOutputHref, _pathTranslator, _fileSystemResolver, _httpResolver, _rootEmbeddedResourceResolver, _standardEmbeddedResourceResolver)
                 .WithDebuggingEnabled(true)
                 .Create()
                 .AddString(css)
@@ -1273,7 +1300,7 @@ background:url(images/button-loader.gif) #ccc;
         [Test]
         public void DoesNotRenderDuplicateArbitraryStringsInDebug()
         {
-            var tag = new CSSBundleFactory(httpUtility)
+            var tag = new CssBundleFactory(_httpUtility, _baseOutputHref, _pathTranslator, _fileSystemResolver, _httpResolver, _rootEmbeddedResourceResolver, _standardEmbeddedResourceResolver)
                 .WithDebuggingEnabled(true)
                 .Create()
                 .AddString(css)
@@ -1294,7 +1321,7 @@ background:url(images/button-loader.gif) #ccc;
 
             var writerFactory = new StubFileWriterFactory();
 
-            var tag = new CSSBundleFactory(httpUtility)
+            var tag = new CssBundleFactory(_httpUtility, _baseOutputHref, _pathTranslator, _fileSystemResolver, _httpResolver, _rootEmbeddedResourceResolver, _standardEmbeddedResourceResolver)
                     .WithDebuggingEnabled(false)
                     .WithFileWriterFactory(writerFactory)
                     .WithHasher(new StubHasher("hashy"))
@@ -1391,8 +1418,8 @@ background:url(images/button-loader.gif) #ccc;
         [Test]
         public void CanIncludeDynamicContentInDebug()
         {
-            var context = new Mock<HttpContextBase>();
-            var request = new Mock<HttpRequestBase>();
+            var context = new Mock<IHttpContext>();
+            var request = new Mock<IHttpRequest>();
             request.SetupGet(r => r.Url).Returns(new Uri("http://example.com"));
             context.SetupGet(c => c.Request).Returns(request.Object);
 
@@ -1415,8 +1442,8 @@ background:url(images/button-loader.gif) #ccc;
         public void CanIncludeDynamicContentInRelease()
         {
             //this doesn't really test the nitty-gritty details (http resolver, download etc...) but its a start
-            var context = new Mock<HttpContextBase>();
-            var request = new Mock<HttpRequestBase>();
+            var context = new Mock<IHttpContext>();
+            var request = new Mock<IHttpRequest>();
             request.SetupGet(r => r.Url).Returns(new Uri("http://example.com"));
             context.SetupGet(c => c.Request).Returns(request.Object);
 
@@ -1524,7 +1551,7 @@ background:url(images/button-loader.gif) #ccc;
             var file2 = "anothertest.css";
             Func<bool> queryStringPredicate = () => HttpContext.Current.Request.QueryString.AllKeys.Contains("debug") && HttpContext.Current.Request.QueryString["debug"] == "true";
 
-            var nonDebugContext = new Mock<HttpContextBase>();
+            var nonDebugContext = new Mock<IHttpContext>();
             nonDebugContext.Setup(hcb => hcb.Request.ApplicationPath).Returns(string.Empty);
             nonDebugContext.Setup(hcb => hcb.Request.QueryString).Returns(new NameValueCollection());
             nonDebugContext.Setup(hcb => hcb.Server.MapPath("/" + file1)).Returns(Path.Combine(Environment.CurrentDirectory, file1));
@@ -1549,7 +1576,7 @@ background:url(images/button-loader.gif) #ccc;
                 Assert.AreEqual(expectedTag, TestUtilities.NormalizeLineEndings(tag));
             }
 
-            var debugContext = new Mock<HttpContextBase>();
+            var debugContext = new Mock<IHttpContext>();
             debugContext.Setup(hcb => hcb.Request.QueryString).Returns(new NameValueCollection { { "debug", "true" } });
             debugContext.Setup(hcb => hcb.Server.MapPath("/" + file1)).Returns(Path.Combine(Environment.CurrentDirectory, file1));
             debugContext.Setup(hcb => hcb.Server.MapPath("/" + file2)).Returns(Path.Combine(Environment.CurrentDirectory, file2));
@@ -1583,13 +1610,13 @@ background:url(images/button-loader.gif) #ccc;
             var file2 = "anothertest.css";
             Func<bool> queryStringPredicate = () => HttpContext.Current.Request.QueryString.AllKeys.Contains("debug") && HttpContext.Current.Request.QueryString["debug"] == "true";
 
-            var debugContext = new Mock<HttpContextBase>();
+            var debugContext = new Mock<IHttpContext>();
             debugContext.Setup(hcb => hcb.Request.QueryString).Returns(new NameValueCollection { { "debug", "true" } });
             debugContext.Setup(hcb => hcb.Server.MapPath("/" + file1)).Returns(Path.Combine(Environment.CurrentDirectory, file1));
             debugContext.Setup(hcb => hcb.Server.MapPath("/" + file2)).Returns(Path.Combine(Environment.CurrentDirectory, file2));
             debugContext.Setup(hcb => hcb.Server.MapPath("/output.css")).Returns(Path.Combine(Environment.CurrentDirectory, "output.css"));
 
-            var nonDebugContext = new Mock<HttpContextBase>();
+            var nonDebugContext = new Mock<IHttpContext>();
             nonDebugContext.Setup(hcb => hcb.Request.QueryString).Returns(new NameValueCollection());
             nonDebugContext.Setup(hcb => hcb.Server.MapPath("/" + file1)).Returns(Path.Combine(Environment.CurrentDirectory, file1));
             nonDebugContext.Setup(hcb => hcb.Server.MapPath("/" + file2)).Returns(Path.Combine(Environment.CurrentDirectory, file2));
@@ -1646,13 +1673,13 @@ background:url(images/button-loader.gif) #ccc;
             var file2 = "anothertest.css";
             Func<bool> queryStringPredicate = () => HttpContext.Current.Request.QueryString.AllKeys.Contains("debug") && HttpContext.Current.Request.QueryString["debug"] == "true";
 
-            var debugContext = new Mock<HttpContextBase>();
+            var debugContext = new Mock<IHttpContext>();
             debugContext.Setup(hcb => hcb.Request.QueryString).Returns(new NameValueCollection { { "debug", "true" } });
             debugContext.Setup(hcb => hcb.Server.MapPath("/" + file1)).Returns(Path.Combine(Environment.CurrentDirectory, file1));
             debugContext.Setup(hcb => hcb.Server.MapPath("/" + file2)).Returns(Path.Combine(Environment.CurrentDirectory, file2));
             debugContext.Setup(hcb => hcb.Server.MapPath("/output.css")).Returns(Path.Combine(Environment.CurrentDirectory, "output.css"));
 
-            var nonDebugContext = new Mock<HttpContextBase>();
+            var nonDebugContext = new Mock<IHttpContext>();
             nonDebugContext.Setup(hcb => hcb.Request.QueryString).Returns(new NameValueCollection());
             nonDebugContext.Setup(hcb => hcb.Server.MapPath("/" + file1)).Returns(Path.Combine(Environment.CurrentDirectory, file1));
             nonDebugContext.Setup(hcb => hcb.Server.MapPath("/" + file2)).Returns(Path.Combine(Environment.CurrentDirectory, file2));

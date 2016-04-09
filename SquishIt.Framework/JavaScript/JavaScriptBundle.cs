@@ -5,6 +5,7 @@ using SquishIt.Framework.Base;
 using SquishIt.Framework.Caches;
 using SquishIt.Framework.Files;
 using SquishIt.Framework.Minifiers;
+using SquishIt.Framework.Resolvers;
 using SquishIt.Framework.Utilities;
 
 namespace SquishIt.Framework.JavaScript
@@ -27,17 +28,17 @@ namespace SquishIt.Framework.JavaScript
             get { return Configuration.Instance.DefaultJsMinifier(); }
         }
 
-        protected override IEnumerable<string> allowedExtensions
+        protected override IEnumerable<string> allowedFileExtensions
         {
             get { return bundleState.AllowedExtensions.Union(Bundle.AllowedGlobalExtensions.Union(Bundle.AllowedScriptExtensions)); }
         }
 
-        protected override IEnumerable<string> disallowedExtensions
+        protected override IEnumerable<string> disallowedFileExtensions
         {
             get { return Bundle.AllowedStyleExtensions; }
         }
 
-        protected override string defaultExtension
+        protected override string defaultFileExtension
         {
             get { return ".JS"; }
         }
@@ -47,14 +48,17 @@ namespace SquishIt.Framework.JavaScript
             get { return bundleState.Typeless ? TAG_FORMAT.Replace(" type=\"text/javascript\"", "") : TAG_FORMAT; }
         }
 
-        public JavaScriptBundle()
-            : this(new DebugStatusReader()) { }
-
         public JavaScriptBundle(IDebugStatusReader debugStatusReader)
-            : this(debugStatusReader, new FileWriterFactory(Configuration.Instance.DefaultRetryableFileOpener(), 5), new FileReaderFactory(Configuration.Instance.DefaultRetryableFileOpener(), 5), new DirectoryWrapper(), Configuration.Instance.DefaultHasher(), new BundleCache(), new RawContentCache()) { }
+            : this(debugStatusReader, new FileWriterFactory(Configuration.Instance.DefaultRetryableFileOpener(), 5), new FileReaderFactory(Configuration.Instance.DefaultRetryableFileOpener(), 5), new DirectoryWrapper(), Configuration.Instance.DefaultHasher(), new BundleCache(), new RawContentCache(), Configuration.Instance.DefaultOutputBaseHref(), Configuration.Instance.DefaultPathTranslator(),
+            Configuration.Instance.FileSystemResolver, Configuration.Instance.HttpResolver, Configuration.Instance.RootEmbeddedResourceResolver, Configuration.Instance.StandardEmbeddedResourceResolver)
+        {
+        }
 
-        public JavaScriptBundle(IDebugStatusReader debugStatusReader, IFileWriterFactory fileWriterFactory, IFileReaderFactory fileReaderFactory, IDirectoryWrapper directoryWrapper, IHasher hasher, IContentCache bundleCache, IContentCache rawContentCache) :
-            base(fileWriterFactory, fileReaderFactory, debugStatusReader, directoryWrapper, hasher, bundleCache, rawContentCache) { }
+        public JavaScriptBundle(IDebugStatusReader debugStatusReader, IFileWriterFactory fileWriterFactory, IFileReaderFactory fileReaderFactory, IDirectoryWrapper directoryWrapper, IHasher hasher, IContentCache bundleCache, IContentCache rawContentCache, string baseOutputHref, IPathTranslator pathTranslator,
+            IFolderResolver fileSystemResolver, IFileResolver httpResolver, IFileResolver rootEmbeddedResourceResolver, IFileResolver standardEmbeddedResourceResolver) :
+            base(fileWriterFactory, fileReaderFactory, debugStatusReader, directoryWrapper, hasher, bundleCache, rawContentCache, baseOutputHref, pathTranslator, fileSystemResolver, httpResolver, rootEmbeddedResourceResolver, standardEmbeddedResourceResolver)
+        {
+        }
 
         protected override string Template
         {
@@ -74,23 +78,32 @@ namespace SquishIt.Framework.JavaScript
         protected override string ProcessFile(string file, string outputFile, Asset originalAsset)
         {
             var preprocessors = FindPreprocessors(file);
-            return MinifyIfNeeded(preprocessors.NullSafeAny()
-                ? PreprocessFile(file, preprocessors)
-                : ReadFile(file), originalAsset.Minify);
+            string content;
+            if (preprocessors.NullSafeAny())
+            {
+                content = PreprocessFile(file, preprocessors);
+            }
+            else
+            {
+                content = ReadFile(file);
+            }
+            var minifyIfNeeded = MinifyIfNeeded(content, originalAsset.Minify);
+
+            return minifyIfNeeded;
         }
 
         protected override void AggregateContent(List<Asset> assets, StringBuilder sb, string outputFile)
         {
             assets.SelectMany(a => a.IsArbitrary
-                                       ? new[] { PreprocessArbitrary(a) }.AsEnumerable()
-                                       : GetFilesForSingleAsset(a).Select(f => ProcessFile(f, outputFile, a)))
-                .ToList()
-                .Distinct()
-                .Aggregate(sb, (b, s) =>
-                {
-                    b.Append(s);
-                    return b;
-                });
+                ? new[] {PreprocessArbitrary(a)}.AsEnumerable()
+                : GetFilenamesForSingleAsset(a).Select(f => ProcessFile(f, outputFile, a)))
+                  .ToList()
+                  .Distinct()
+                  .Aggregate(sb, (b, s) =>
+                                 {
+                                     b.Append(s);
+                                     return b;
+                                 });
         }
 
         const string MINIFIED_FILE_SEPARATOR = ";\n";

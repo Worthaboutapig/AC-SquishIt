@@ -6,6 +6,7 @@ using SquishIt.Framework.JavaScript;
 using SquishIt.Framework.Minifiers;
 using SquishIt.Framework.Minifiers.JavaScript;
 using SquishIt.Framework.Renderers;
+using SquishIt.Framework.Resolvers;
 using SquishIt.Framework.Utilities;
 using SquishIt.Framework.Web;
 using MsMinifier = SquishIt.Framework.Minifiers.CSS.MsMinifier;
@@ -14,7 +15,7 @@ using YuiMinifier = SquishIt.Framework.Minifiers.CSS.YuiMinifier;
 
 namespace SquishIt.Framework
 {
-    public class Configuration
+    public abstract class Configuration
     {
         private static Configuration instance;
         private ICacheInvalidationStrategy _defaultCacheInvalidationStrategy = new DefaultCacheInvalidationStrategy();
@@ -24,23 +25,27 @@ namespace SquishIt.Framework
         private IHasher _defaultHasher;
         private IMinifier<JavaScriptBundle> _defaultJsMinifier = new Minifiers.JavaScript.MsMinifier();
         private string _defaultOutputBaseHref;
-        private IPathTranslator _defaultPathTranslator = new PathTranslator();
         private IRenderer _defaultReleaseRenderer;
         private ITempPathProvider _defaultTempPathProvider = new TempPathProvider();
         private IRetryableFileOpener _defaultRetryableFileOpener = new RetryableFileOpener();
+        private IPathTranslator _defaultPathTranslator;
         private IHttpUtility _defaultHttpUtility;
+        private IHttpContext _defaultHttpContext;
+        private IVirtualPathUtility _defaultVirtualPathUtility;
 
-        public Configuration()
+        public IDebugStatusReader DebugStatusReader { get; set; }
+        public IFolderResolver FileSystemResolver { get; set; }
+        public IFileResolver HttpResolver { get; set; }
+        public IFileResolver RootEmbeddedResourceResolver { get; set; }
+        public IFileResolver StandardEmbeddedResourceResolver { get; set; }
+
+        protected Configuration()
         {
             JavascriptMimeType = "application/javascript";
             CssMimeType = "text/css";
         }
 
-        public static Configuration Instance
-        {
-            get { return (instance = instance ?? new Configuration()); }
-            internal set { instance = value; }
-        }
+        public static Configuration Instance { get; set; }
 
         /// <summary>
         ///     Mime-type used to serve Javascript content. Defaults to "application/javascript".
@@ -178,7 +183,7 @@ namespace SquishIt.Framework
             return this;
         }
 
-        internal string DefaultOutputBaseHref()
+        public string DefaultOutputBaseHref()
         {
             return _defaultOutputBaseHref;
         }
@@ -279,24 +284,46 @@ namespace SquishIt.Framework
 
         public Configuration UseHttpUtility(IHttpUtility httpUtility)
         {
-            if (httpUtility == null)
-            {
-                throw new ArgumentNullException("httpUtility");
-            }
-
             _defaultHttpUtility = httpUtility;
 
             return this;
         }
 
+        /// <summary>
+        /// Returns the current <see cref="IHttpUtility"/>.
+        /// </summary>
+        /// <returns>The current <see cref="IHttpUtility"/>.</returns>
         public IHttpUtility DefaultHttpUtility()
         {
-            if (_defaultHttpUtility == null)
-            {
-                throw new InvalidOperationException("Call 'UseHttpUtility' before requesting the default.");
-            }
-
             return _defaultHttpUtility;
+        }
+
+        public Configuration UseHttpContext(IHttpContext httpContext)
+        {
+            _defaultHttpContext = httpContext;
+
+            return this;
+        }
+
+        /// <summary>
+        /// Returns the current <see cref="IHttpContext"/>.
+        /// </summary>
+        /// <returns>The current <see cref="IHttpContext"/>.</returns>
+        public IHttpContext DefaultHttpContext()
+        {
+            return _defaultHttpContext;
+        }
+
+        public Configuration UseVirtualPathUtility(IVirtualPathUtility virtualPathUtility)
+        {
+            _defaultVirtualPathUtility = virtualPathUtility;
+
+            return this;
+        }
+
+        public IVirtualPathUtility DefaultVirtualPathUtility()
+        {
+            return _defaultVirtualPathUtility;
         }
     }
 }

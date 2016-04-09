@@ -3,22 +3,24 @@ using System.Collections.Generic;
 
 namespace SquishIt.Framework.Resolvers
 {
-    public class ResolverFactory
+    public class ResolverFactory //: IDependencyResolver
     {
-        static Dictionary<string, IResolver> resolvers = new Dictionary<string, IResolver>
-        {
-            {typeof(RootEmbeddedResourceResolver).FullName, new RootEmbeddedResourceResolver()},
-            {typeof(StandardEmbeddedResourceResolver).FullName, new StandardEmbeddedResourceResolver()},
-            {typeof(FileSystemResolver).FullName, new FileSystemResolver()},
-            {typeof(HttpResolver).FullName, new HttpResolver()},
-        };
+        private static readonly ITempPathProvider TempPathProvider = new TempPathProvider();
 
-        public static IResolver Get<T>() where T : IResolver
+        static Dictionary<string, IFileResolver> resolvers = new Dictionary<string, IFileResolver>
+                                                         {
+                                                             {typeof (RootEmbeddedResourceResolver).FullName, new RootEmbeddedResourceResolver(TempPathProvider)},
+                                                             {typeof (StandardEmbeddedResourceResolver).FullName, new StandardEmbeddedResourceResolver(TempPathProvider)},
+                                                             {typeof (FileSystemResolver).FullName, new FileSystemResolver()},
+                                                             {typeof (HttpResolver).FullName, new HttpResolver(TempPathProvider)}
+                                                         };
+
+        public static T Get<T>() where T : IFileResolver
         {
-            return resolvers[typeof(T).FullName];
+            return (T)resolvers[typeof (T).FullName];
         }
-
-        internal static void SetContent(string key, IResolver resolver)
+        
+        internal static void SetContent(string key, IFileResolver resolver)
         {
             if (resolvers.ContainsKey(key))
             {
@@ -32,13 +34,13 @@ namespace SquishIt.Framework.Resolvers
 
         internal static void Reset()
         {
-            resolvers = new Dictionary<string, IResolver>
-            {
-            {typeof(RootEmbeddedResourceResolver).FullName, new RootEmbeddedResourceResolver()},
-            {typeof(StandardEmbeddedResourceResolver).FullName, new StandardEmbeddedResourceResolver()},
-            {typeof(FileSystemResolver).FullName, new FileSystemResolver()},
-            {typeof(HttpResolver).FullName, new HttpResolver()},
-            };
+            resolvers = new Dictionary<string, IFileResolver>
+                        {
+                            {typeof (RootEmbeddedResourceResolver).FullName, new RootEmbeddedResourceResolver(TempPathProvider)},
+                            {typeof (StandardEmbeddedResourceResolver).FullName, new StandardEmbeddedResourceResolver(TempPathProvider)},
+                            {typeof (FileSystemResolver).FullName, new FileSystemResolver()},
+                            {typeof (HttpResolver).FullName, new HttpResolver(TempPathProvider)}
+                        };
         }
     }
 }

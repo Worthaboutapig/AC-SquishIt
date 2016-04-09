@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Diagnostics.Contracts;
 using NUnit.Framework;
+using SquishIt.Framework;
 using SquishIt.Framework.Files;
+using SquishIt.Framework.Resolvers;
 using SquishIt.Framework.Utilities;
 using SquishIt.Framework.Web;
 using SquishIt.Sass;
@@ -10,9 +13,9 @@ using SquishIt.Tests.Stubs;
 namespace SquishIt.Tests
 {
     [TestFixture(Category = "IgnoreCI", Description = "Assembly loading issues on build server.")]
-    public abstract class SassTests : WebTests
+    public abstract class SassTests
     {
-        CSSBundleFactory cssBundleFactory;
+        CssBundleFactory cssBundleFactory;
         IHasher hasher;
         string scss = @"$blue: #3bbfce;
                     $margin: 16px;
@@ -51,18 +54,45 @@ $margin: 16px
   border-color: #3bbfce; }
 </style>") + Environment.NewLine;//account for stringbuilder
 
-        protected SassTests(IHttpUtility httpUtility) : base(httpUtility)
+        private readonly IHttpUtility _httpUtility;
+        private readonly string _baseOutputHref;
+        private readonly IPathTranslator _pathTranslator;
+        private readonly FileSystemResolver _fileSystemResolver;
+        private readonly HttpResolver _httpResolver;
+        private readonly RootEmbeddedResourceResolver _rootEmbeddedResourceResolver;
+        private readonly StandardEmbeddedResourceResolver _standardEmbeddedResourceResolver;
+
+        protected SassTests(IHttpUtility httpUtility, string baseOutputHref, IPathTranslator pathTranslator, FileSystemResolver fileSystemResolver, HttpResolver httpResolver, RootEmbeddedResourceResolver rootEmbeddedResourceResolver, StandardEmbeddedResourceResolver standardEmbeddedResourceResolver)
         {
-            if (httpUtility == null)
-            {
-                throw new ArgumentNullException("httpUtility");
-            }
+            Contract.Requires(httpUtility != null);
+            Contract.Requires(baseOutputHref != null);
+            Contract.Requires(pathTranslator != null);
+            Contract.Requires(fileSystemResolver != null);
+            Contract.Requires(httpResolver != null);
+            Contract.Requires(rootEmbeddedResourceResolver != null);
+            Contract.Requires(standardEmbeddedResourceResolver != null);
+
+
+            Contract.Ensures(_httpUtility != null); Contract.Ensures(_baseOutputHref != null);
+            Contract.Ensures(_pathTranslator != null);
+            Contract.Ensures(_fileSystemResolver != null);
+            Contract.Ensures(_httpResolver != null);
+            Contract.Ensures(_rootEmbeddedResourceResolver != null);
+            Contract.Ensures(_standardEmbeddedResourceResolver != null);
+
+            _httpUtility = httpUtility;
+            _baseOutputHref = baseOutputHref;
+            _pathTranslator = pathTranslator;
+            _fileSystemResolver = fileSystemResolver;
+            _httpResolver = httpResolver;
+            _rootEmbeddedResourceResolver = rootEmbeddedResourceResolver;
+            _standardEmbeddedResourceResolver = standardEmbeddedResourceResolver;
         }
 
         [SetUp]
         public void Setup()
         {
-            cssBundleFactory = new CSSBundleFactory(httpUtility);
+            cssBundleFactory = new CssBundleFactory(_httpUtility, _baseOutputHref, _pathTranslator, _fileSystemResolver, _httpResolver, _rootEmbeddedResourceResolver, _standardEmbeddedResourceResolver);
             var retryableFileOpener = new RetryableFileOpener();
             hasher = new Hasher(retryableFileOpener);
         }

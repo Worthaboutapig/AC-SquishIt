@@ -19,9 +19,14 @@ namespace SquishIt.Mvc
         public static AutoBundlingBehavior Behavior { get; set; }
 
         private IHasher _hasher = Configuration.Instance.DefaultHasher();
+        private static readonly IDebugStatusReader _debugStatusReader;
 
         static AutoBundler()
         {
+            var machineConfigReader = new MachineConfigReader();
+            var httpContext = new AspNet.Web.HttpContext(HttpContext.Current);
+            _debugStatusReader = new DebugStatusReader(machineConfigReader, httpContext);
+
             Behavior = new AutoBundlingBehavior
             {
                 FilenameFormat = "{0}{1}{2}",
@@ -92,7 +97,7 @@ namespace SquishIt.Mvc
         /// <param name="resourceFiles">Zero or more project paths to JavaScript files</param>
         public void AddStyleResources(string viewPath, params string[] resourceFiles)
         {
-            AddBundles(Bundle.Css, viewPath, Behavior.KeepStylesInOriginalFolder, STYLE_BUNDLE_EXTENSION, resourceFiles);
+            AddBundles(() => Bundle.Css(_debugStatusReader), viewPath, Behavior.KeepStylesInOriginalFolder, STYLE_BUNDLE_EXTENSION, resourceFiles);
         }
 
         /// <summary>
@@ -101,7 +106,7 @@ namespace SquishIt.Mvc
         /// <param name="resourceFiles">Zero or more project paths to JavaScript files</param>
         public void AddScriptResources(string viewPath, params string[] resourceFiles)
         {
-            AddBundles(Bundle.JavaScript, viewPath, Behavior.KeepScriptsInOriginalFolder, SCRIPT_BUNDLE_EXTENSION, resourceFiles);
+            AddBundles(() => Bundle.JavaScript(_debugStatusReader), viewPath, Behavior.KeepScriptsInOriginalFolder, SCRIPT_BUNDLE_EXTENSION, resourceFiles);
         }
 
         private void AddBundles<bT>(Func<BundleBase<bT>> newBundleFunc, string viewPath, bool originalFolder, string bundleExtension, string[] resourceFiles) where bT : BundleBase<bT>

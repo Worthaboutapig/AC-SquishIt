@@ -9,10 +9,12 @@ using SquishIt.Tests.Stubs;
 using SquishIt.Framework;
 using System.Threading;
 using SquishIt.Framework.Web;
+using System.Diagnostics.Contracts;
+using SquishIt.Framework.Resolvers;
 
 namespace SquishIt.Tests
 {
-    public abstract class LessTests : WebTests
+    public abstract class LessTests
     {
         string cssLess = TestUtilities.NormalizeLineEndings (@"@brand_color: #4D926F;
 
@@ -24,21 +26,46 @@ namespace SquishIt.Tests
                                         color: @brand_color;
                                     }");
 
-        CSSBundleFactory cssBundleFactory;
+        CssBundleFactory cssBundleFactory;
         IHasher hasher;
-        private IPathTranslator translator = Configuration.Instance.DefaultPathTranslator();
+        private readonly IHttpUtility _httpUtility;
+        private readonly string _baseOutputHref;
+        private readonly IPathTranslator _pathTranslator;
+        private readonly FileSystemResolver _fileSystemResolver;
+        private readonly HttpResolver _httpResolver;
+        private readonly RootEmbeddedResourceResolver _rootEmbeddedResourceResolver;
+        private readonly StandardEmbeddedResourceResolver _standardEmbeddedResourceResolver;
 
-        protected LessTests(IHttpUtility httpUtility) : base(httpUtility)
+        protected LessTests(IHttpUtility httpUtility, string baseOutputHref, IPathTranslator pathTranslator, FileSystemResolver fileSystemResolver, HttpResolver httpResolver, RootEmbeddedResourceResolver rootEmbeddedResourceResolver, StandardEmbeddedResourceResolver standardEmbeddedResourceResolver)
         {
-            if (httpUtility == null)
-            {
-                throw new ArgumentNullException("httpUtility");
-            }
+            Contract.Requires(httpUtility != null);
+            Contract.Requires(baseOutputHref != null);
+            Contract.Requires(pathTranslator != null);
+            Contract.Requires(fileSystemResolver != null);
+            Contract.Requires(httpResolver != null);
+            Contract.Requires(rootEmbeddedResourceResolver != null);
+            Contract.Requires(standardEmbeddedResourceResolver != null);
+
+
+            Contract.Ensures(_httpUtility != null); Contract.Ensures(_baseOutputHref != null);
+            Contract.Ensures(_pathTranslator != null);
+            Contract.Ensures(_fileSystemResolver != null);
+            Contract.Ensures(_httpResolver != null);
+            Contract.Ensures(_rootEmbeddedResourceResolver != null);
+            Contract.Ensures(_standardEmbeddedResourceResolver != null);
+
+            _httpUtility = httpUtility;
+            _baseOutputHref = baseOutputHref;
+            _pathTranslator = pathTranslator;
+            _fileSystemResolver = fileSystemResolver;
+            _httpResolver = httpResolver;
+            _rootEmbeddedResourceResolver = rootEmbeddedResourceResolver;
+            _standardEmbeddedResourceResolver = standardEmbeddedResourceResolver;
         }
 
         [SetUp]
         public void Setup () {
-            cssBundleFactory = new CSSBundleFactory(httpUtility);
+            cssBundleFactory = new CssBundleFactory(_httpUtility, _baseOutputHref, _pathTranslator, _fileSystemResolver, _httpResolver, _rootEmbeddedResourceResolver, _standardEmbeddedResourceResolver);
             var retryableFileOpener = new RetryableFileOpener ();
             hasher = new Hasher (retryableFileOpener);
         }
@@ -90,7 +117,7 @@ namespace SquishIt.Tests
             TestUtilities.DeleteFile("other.less");
 
             Assert.AreEqual("#footer{color:#fff}#header{color:#4d926f}", cssBundleFactory.FileWriterFactory.Files[TestUtilities.PrepareRelativePath(@"css\output_test.css")]);
-            Assert.Contains(translator.ResolveAppRelativePathToFileSystem("css/other.less"), cssBundle.bundleState.DependentFiles);
+            Assert.Contains(_pathTranslator.ResolveAppRelativePathToFileSystem("css/other.less"), cssBundle.bundleState.DependentFiles);
         }
 
         [Test]
@@ -171,8 +198,8 @@ namespace SquishIt.Tests
 
             Assert.AreEqual("#cssA{color:#fff}.cssA{color:#aaa}", cssBundleFactory.FileWriterFactory.Files[TestUtilities.PrepareRelativePath(@"css_A\output_test.css")]);
             Assert.AreEqual("#cssB{color:#000}.cssB{color:#bbb}", cssBundleFactory.FileWriterFactory.Files[TestUtilities.PrepareRelativePath(@"css_B\output_test.css")]);
-            Assert.Contains(translator.ResolveAppRelativePathToFileSystem("css_A/other.less"), cssBundleA.bundleState.DependentFiles);
-            Assert.Contains(translator.ResolveAppRelativePathToFileSystem("css_B/other.less"), cssBundleB.bundleState.DependentFiles);
+            Assert.Contains(_pathTranslator.ResolveAppRelativePathToFileSystem("css_A/other.less"), cssBundleA.bundleState.DependentFiles);
+            Assert.Contains(_pathTranslator.ResolveAppRelativePathToFileSystem("css_B/other.less"), cssBundleB.bundleState.DependentFiles);
         }
 
         [Test]

@@ -3,7 +3,7 @@ using SquishIt.Framework.Files;
 
 namespace SquishIt.Tests.Stubs
 {
-    public class StubFileReaderFactory: IFileReaderFactory
+    public class StubFileReaderFactory : IFileReaderFactory
     {
         string contents;
         bool fileExists;
@@ -23,7 +23,7 @@ namespace SquishIt.Tests.Stubs
         {
             this.fileExists = fileExists;
         }
-        
+
         public IFileReader GetFileReader(string file)
         {
             if (contentsForFiles.ContainsKey(file))

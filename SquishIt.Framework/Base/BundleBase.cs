@@ -8,6 +8,7 @@ using SquishIt.Framework.Minifiers;
 using SquishIt.Framework.Renderers;
 using SquishIt.Framework.Files;
 using SquishIt.Framework.Utilities;
+using SquishIt.Framework.Resolvers;
 
 namespace SquishIt.Framework.Base
 {
@@ -15,71 +16,79 @@ namespace SquishIt.Framework.Base
     /// Base class for bundle implementations.  Configuration methods all return (T)this.
     /// </summary>
     /// <typeparam name="T">Type of bundle being implemented (Javascript or CSS).</typeparam>
-    public abstract partial class BundleBase<T> : IRenderable where T : BundleBase<T>
+    public abstract partial class BundleBase<T> : IRenderable
+        where T : BundleBase<T>
     {
         static readonly Dictionary<string, string> renderPathCache = new Dictionary<string, string>();
         static readonly Dictionary<string, BundleState> bundleStateCache = new Dictionary<string, BundleState>();
         static readonly Dictionary<string, BundleState> rawContentBundleStateCache = new Dictionary<string, BundleState>();
- 
+
         protected abstract IMinifier<T> DefaultMinifier { get; }
         protected abstract string tagFormat { get; }
         protected abstract string Template { get; }
         protected abstract string CachePrefix { get; }
-        protected abstract IEnumerable<string> allowedExtensions { get; }
-        protected abstract IEnumerable<string> disallowedExtensions { get; }
-        protected abstract string defaultExtension { get; }
-        protected string debugExtension { get { return ".squishit.debug" + defaultExtension.ToLowerInvariant(); } }
+        protected abstract IEnumerable<string> allowedFileExtensions { get; }
+        protected abstract IEnumerable<string> disallowedFileExtensions { get; }
+        protected abstract string defaultFileExtension { get; }
+        protected string debugFileExtension { get { return ".squishit.debug" + defaultFileExtension.ToLowerInvariant(); } }
         protected abstract string ProcessFile(string file, string outputFile, Asset originalAsset);
 
         internal BundleState bundleState;
         readonly IContentCache bundleCache;
         readonly IContentCache rawContentCache;
-        protected string BaseOutputHref = Configuration.Instance.DefaultOutputBaseHref();
         protected IFileWriterFactory fileWriterFactory;
         protected IFileReaderFactory fileReaderFactory;
-        protected IDebugStatusReader debugStatusReader;
+        protected IDebugStatusReader _debugStatusReader;
         protected IDirectoryWrapper directoryWrapper;
         protected IHasher hasher;
-        protected IPathTranslator pathTranslator = Configuration.Instance.DefaultPathTranslator();
+        protected string BaseOutputHref { get; set; }
+        protected IPathTranslator PathTranslator { get; set; }
+
+        private readonly Asset.FilenamesResolver _assetFilenamesResolver;
 
         IMinifier<T> minifier;
 
-        protected IMinifier<T> Minifier
-        {
-            get { return minifier ?? DefaultMinifier; }
-            set { minifier = value; }
-        }
+        protected IMinifier<T> Minifier { get { return minifier ?? DefaultMinifier; } set { minifier = value; } }
 
-        protected BundleBase(IFileWriterFactory fileWriterFactory, IFileReaderFactory fileReaderFactory, IDebugStatusReader debugStatusReader, IDirectoryWrapper directoryWrapper, IHasher hasher, IContentCache bundleCache, IContentCache rawContentCache)
+        protected BundleBase(IFileWriterFactory fileWriterFactory, IFileReaderFactory fileReaderFactory,
+                             IDebugStatusReader debugStatusReader, IDirectoryWrapper directoryWrapper, IHasher hasher,
+                             IContentCache bundleCache, IContentCache rawContentCache, string baseOutputHref,
+                             IPathTranslator pathTranslator, IFolderResolver fileSystemResolver, IFileResolver httpResolver,
+                             IFileResolver rootEmbeddedResourceResolver, IFileResolver standardEmbeddedResourceResolver)
         {
             this.fileWriterFactory = fileWriterFactory;
             this.fileReaderFactory = fileReaderFactory;
-            this.debugStatusReader = debugStatusReader;
+            _debugStatusReader = debugStatusReader;
             this.directoryWrapper = directoryWrapper;
             this.hasher = hasher;
             bundleState = new BundleState
-                              {
-                                  DebugPredicate = Configuration.Instance.DefaultDebugPredicate(),
-                                  ShouldRenderOnlyIfOutputFileIsMissing = false,
-                                  HashKeyName = Configuration.Instance.DefaultHashKeyName(),
-                                  CacheInvalidationStrategy = Configuration.Instance.DefaultCacheInvalidationStrategy()
-                              };
+                          {
+                              DebugPredicate = Configuration.Instance.DefaultDebugPredicate(),
+                              ShouldRenderOnlyIfOutputFileIsMissing = false,
+                              HashKeyName = Configuration.Instance.DefaultHashKeyName(),
+                              CacheInvalidationStrategy = Configuration.Instance.DefaultCacheInvalidationStrategy()
+                          };
             this.bundleCache = bundleCache;
             this.rawContentCache = rawContentCache;
+            BaseOutputHref = baseOutputHref;
+            PathTranslator = pathTranslator;
+            _assetFilenamesResolver = new Asset.FilenamesResolver(pathTranslator, fileSystemResolver, httpResolver, rootEmbeddedResourceResolver, standardEmbeddedResourceResolver);
         }
 
         //TODO: should this be public?
         internal bool IsDebuggingEnabled()
         {
-            return debugStatusReader.IsDebuggingEnabled(bundleState.DebugPredicate);
+            var isDebuggingEnabled = _debugStatusReader.IsDebuggingEnabled(bundleState.DebugPredicate);
+            return isDebuggingEnabled;
         }
 
         protected IRenderer GetFileRenderer()
         {
-            return IsDebuggingEnabled() ? new FileRenderer(fileWriterFactory) :
-                bundleState.ReleaseFileRenderer ??
-                Configuration.Instance.DefaultReleaseRenderer() ??
-                new FileRenderer(fileWriterFactory);
+            return IsDebuggingEnabled()
+                ? new FileRenderer(fileWriterFactory)
+                : bundleState.ReleaseFileRenderer ??
+                  Configuration.Instance.DefaultReleaseRenderer() ??
+                  new FileRenderer(fileWriterFactory);
         }
 
         void AddAsset(Asset asset)
@@ -93,7 +102,7 @@ namespace SquishIt.Framework.Base
         public T WithoutTypeAttribute()
         {
             bundleState.Typeless = true;
-            return (T)this;
+            return (T) this;
         }
 
         /// <summary>
@@ -102,8 +111,11 @@ namespace SquishIt.Framework.Base
         /// <param name="filePath">Path to file being added</param>
         public T Add(string filePath)
         {
-            AddAsset(new Asset { LocalPath = filePath });
-            return (T)this;
+            AddAsset(new Asset
+                     {
+                         LocalPath = filePath
+                     });
+            return (T) this;
         }
 
         /// <summary>
@@ -112,8 +124,12 @@ namespace SquishIt.Framework.Base
         /// <param name="filePath">Path to file being added</param>
         public T AddMinified(string filePath)
         {
-            AddAsset(new Asset { LocalPath = filePath, Minify = false });
-            return (T)this;
+            AddAsset(new Asset
+                     {
+                         LocalPath = filePath,
+                         Minify = false
+                     });
+            return (T) this;
         }
 
         /// <summary>
@@ -138,8 +154,13 @@ namespace SquishIt.Framework.Base
 
         T AddDirectory(string folderPath, bool recursive, bool minify)
         {
-            AddAsset(new Asset { LocalPath = folderPath, IsRecursive = recursive, Minify = minify });
-            return (T)this;
+            AddAsset(new Asset
+                     {
+                         LocalPath = folderPath,
+                         IsRecursive = recursive,
+                         Minify = minify
+                     });
+            return (T) this;
         }
 
         /// <summary>
@@ -148,7 +169,7 @@ namespace SquishIt.Framework.Base
         /// <param name="content">Content to include in bundle.</param>
         public T AddString(string content)
         {
-            return AddString(content, defaultExtension, true);
+            return AddString(content, defaultFileExtension, true);
         }
 
         /// <summary>
@@ -168,7 +189,7 @@ namespace SquishIt.Framework.Base
         /// <param name="content">Minified content to include in bundle.</param>
         public T AddMinifiedString(string content)
         {
-            return AddString(content, defaultExtension, false);
+            return AddString(content, defaultFileExtension, false);
         }
 
         /// <summary>
@@ -185,8 +206,14 @@ namespace SquishIt.Framework.Base
         T AddString(string content, string extension, bool minify, string currentDirectory = null)
         {
             if (bundleState.Assets.All(ac => ac.Content != content))
-                bundleState.Assets.Add(new Asset { Content = content, Extension = extension, Minify = minify, ArbitraryWorkingDirectory = currentDirectory });
-            return (T)this;
+                bundleState.Assets.Add(new Asset
+                                       {
+                                           Content = content,
+                                           Extension = extension,
+                                           Minify = minify,
+                                           ArbitraryWorkingDirectory = currentDirectory
+                                       });
+            return (T) this;
         }
 
         /// <summary>
@@ -196,7 +223,7 @@ namespace SquishIt.Framework.Base
         /// <param name="values">Values to be injected using string.Format.</param>
         public T AddString(string format, object[] values)
         {
-            return AddString(format, defaultExtension, values);
+            return AddString(format, defaultFileExtension, values);
         }
 
         /// <summary>
@@ -230,13 +257,13 @@ namespace SquishIt.Framework.Base
         public T AddRemote(string localPath, string remotePath, bool downloadRemote)
         {
             var asset = new Asset
-            {
-                LocalPath = localPath,
-                RemotePath = remotePath,
-                DownloadRemote = downloadRemote
-            };
+                        {
+                            LocalPath = localPath,
+                            RemotePath = remotePath,
+                            DownloadRemote = downloadRemote
+                        };
             AddAsset(asset);
-            return (T)this;
+            return (T) this;
         }
 
         /// <summary>
@@ -245,7 +272,7 @@ namespace SquishIt.Framework.Base
         /// <param name="siteRelativePath">Site-relative path to content (eg "signalr/hubs").</param>
         public T AddDynamic(string siteRelativePath)
         {
-            var absolutePath = pathTranslator.BuildAbsolutePath(siteRelativePath);
+            var absolutePath = PathTranslator.BuildAbsolutePath(siteRelativePath);
             return AddRemote(siteRelativePath, absolutePath, true);
         }
 
@@ -256,8 +283,15 @@ namespace SquishIt.Framework.Base
         /// <param name="embeddedResourcePath">Path to resource embedded in root namespace (eg "WebForms.js").</param>
         public T AddRootEmbeddedResource(string localPath, string embeddedResourcePath)
         {
-            AddAsset(new Asset { LocalPath = localPath, RemotePath = embeddedResourcePath, Order = 0, IsEmbeddedResource = true, IsEmbeddedInRootNamespace = true });
-            return (T)this;
+            AddAsset(new Asset
+                     {
+                         LocalPath = localPath,
+                         RemotePath = embeddedResourcePath,
+                         Order = 0,
+                         IsEmbeddedResource = true,
+                         IsEmbeddedInRootNamespace = true
+                     });
+            return (T) this;
         }
 
         /// <summary>
@@ -267,8 +301,14 @@ namespace SquishIt.Framework.Base
         /// <param name="embeddedResourcePath">Path to embedded resource (eg "SquishIt.Tests://EmbeddedResource.Embedded.css").</param>
         public T AddEmbeddedResource(string localPath, string embeddedResourcePath)
         {
-            AddAsset(new Asset { LocalPath = localPath, RemotePath = embeddedResourcePath, Order = 0, IsEmbeddedResource = true });
-            return (T)this;
+            AddAsset(new Asset
+                     {
+                         LocalPath = localPath,
+                         RemotePath = embeddedResourcePath,
+                         Order = 0,
+                         IsEmbeddedResource = true
+                     });
+            return (T) this;
         }
 
         /// <summary>
@@ -277,7 +317,7 @@ namespace SquishIt.Framework.Base
         public T RenderOnlyIfOutputFileMissing()
         {
             bundleState.ShouldRenderOnlyIfOutputFileIsMissing = true;
-            return (T)this;
+            return (T) this;
         }
 
         /// <summary>
@@ -285,9 +325,9 @@ namespace SquishIt.Framework.Base
         /// </summary>
         public T ForceDebug()
         {
-            debugStatusReader.ForceDebug();
+            _debugStatusReader.ForceDebug();
             bundleState.ForceDebug = true;
-            return (T)this;
+            return (T) this;
         }
 
         /// <summary>
@@ -296,7 +336,7 @@ namespace SquishIt.Framework.Base
         public T ForceDebugIf(Func<bool> predicate)
         {
             bundleState.DebugPredicate = predicate;
-            return (T)this;
+            return (T) this;
         }
 
         /// <summary>
@@ -304,9 +344,9 @@ namespace SquishIt.Framework.Base
         /// </summary>
         public T ForceRelease()
         {
-            debugStatusReader.ForceRelease();
+            _debugStatusReader.ForceRelease();
             bundleState.ForceRelease = true;
-            return (T)this;
+            return (T) this;
         }
 
         /// <summary>
@@ -316,7 +356,7 @@ namespace SquishIt.Framework.Base
         public T WithOutputBaseHref(string href)
         {
             BaseOutputHref = href;
-            return (T)this;
+            return (T) this;
         }
 
         /// <summary>
@@ -326,7 +366,7 @@ namespace SquishIt.Framework.Base
         public T WithReleaseFileRenderer(IRenderer renderer)
         {
             bundleState.ReleaseFileRenderer = renderer;
-            return (T)this;
+            return (T) this;
         }
 
         /// <summary>
@@ -336,7 +376,7 @@ namespace SquishIt.Framework.Base
         public T WithCacheInvalidationStrategy(ICacheInvalidationStrategy strategy)
         {
             bundleState.CacheInvalidationStrategy = strategy;
-            return (T)this;
+            return (T) this;
         }
 
         void AddAttributes(Dictionary<string, string> attributes, bool merge = true)
@@ -361,8 +401,11 @@ namespace SquishIt.Framework.Base
         /// <param name="value">Attribute value.</param>
         public T WithAttribute(string name, string value)
         {
-            AddAttributes(new Dictionary<string, string> { { name, value } });
-            return (T)this;
+            AddAttributes(new Dictionary<string, string>
+                          {
+                              {name, value}
+                          });
+            return (T) this;
         }
 
         /// <summary>
@@ -373,7 +416,7 @@ namespace SquishIt.Framework.Base
         public T WithAttributes(Dictionary<string, string> attributes, bool merge = true)
         {
             AddAttributes(attributes, merge: merge);
-            return (T)this;
+            return (T) this;
         }
 
         /// <summary>
@@ -383,7 +426,7 @@ namespace SquishIt.Framework.Base
         public T WithMinifier<TMin>() where TMin : IMinifier<T>
         {
             Minifier = MinifierFactory.Get<T, TMin>();
-            return (T)this;
+            return (T) this;
         }
 
         /// <summary>
@@ -393,7 +436,7 @@ namespace SquishIt.Framework.Base
         public T WithMinifier<TMin>(TMin minifier) where TMin : IMinifier<T>
         {
             Minifier = minifier;
-            return (T)this;
+            return (T) this;
         }
 
         string FillTemplate(BundleState bundleState, string path)
@@ -408,7 +451,7 @@ namespace SquishIt.Framework.Base
         public T HashKeyNamed(string hashQueryStringKeyName)
         {
             bundleState.HashKeyName = hashQueryStringKeyName;
-            return (T)this;
+            return (T) this;
         }
 
         /// <summary>
@@ -427,7 +470,7 @@ namespace SquishIt.Framework.Base
         public T WithPreprocessor(IPreprocessor instance)
         {
             bundleState.AddPreprocessor(instance);
-            return (T)this;
+            return (T) this;
         }
 
         protected abstract void AggregateContent(List<Asset> assets, StringBuilder sb, string outputFile);
@@ -437,11 +480,11 @@ namespace SquishIt.Framework.Base
             var bundle = bundleStateCache[CachePrefix + name];
             if (bundle.ForceDebug)
             {
-                debugStatusReader.ForceDebug();
+                _debugStatusReader.ForceDebug();
             }
             if (bundle.ForceRelease)
             {
-                debugStatusReader.ForceRelease();
+                _debugStatusReader.ForceRelease();
             }
             return bundle;
         }
@@ -548,9 +591,11 @@ namespace SquishIt.Framework.Base
         {
             get
             {
-                return bundleState == null ? 0
-                    : bundleState.Assets == null ? 0 
-                    : bundleState.Assets.Count;
+                return bundleState == null
+                    ? 0
+                    : bundleState.Assets == null
+                        ? 0
+                        : bundleState.Assets.Count;
             }
         }
 

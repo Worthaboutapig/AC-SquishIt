@@ -1,7 +1,7 @@
 ﻿namespace SquishIt.Framework.Web
 {
 	/// <summary>
-	/// Provides utility methods for common virtual path operations.
+	/// Abstracts utility methods for common virtual path operations.
 	/// </summary>
 	public interface IVirtualPathUtility
 	{

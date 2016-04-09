@@ -2,10 +2,10 @@
 
 namespace SquishIt.Framework.Web
 {
-    /// <summary>
-    /// Provides methods for encoding and decoding URLs when processing Web requests.
-    /// </summary>
-    public interface IHttpUtility
+	/// <summary>
+	/// Abstracts methods for encoding and decoding URLs when processing web requests.
+	/// </summary>
+	public interface IHttpUtility
     {
         /// <summary>
         /// Parses a query string into a NameValueCollection using UTF8 encoding.

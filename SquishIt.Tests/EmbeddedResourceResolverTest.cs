@@ -6,6 +6,8 @@ using SquishIt.Framework.Utilities;
 
 namespace SquishIt.Tests
 {
+    using Framework;
+
     [TestFixture]
     public class EmbeddedResourceResolverTest
     {
@@ -33,16 +35,16 @@ th {
         {
             var resourcePath = "SquishIt.Tests://EmbeddedResource.Embedded.css";
 
-            var embeddedResourceResolver = new StandardEmbeddedResourceResolver();
+            var embeddedResourceResolver = new StandardEmbeddedResourceResolver(new TempPathProvider());
 
-            var path = embeddedResourceResolver.Resolve(resourcePath);
+            var path = embeddedResourceResolver.ResolveFilename(resourcePath);
 
             Assert.True(path.EndsWith("EmbeddedResource.Embedded.css"));
 
             Assert.AreEqual(cssContent, File.ReadAllText(path));
 
             TempFileResolutionCache.Clear();
-            
+
             Assert.False(File.Exists(path));
         }
 
@@ -51,10 +53,10 @@ th {
         {
             var resourcePath = "SquishIt.Tests://EmbeddedResource.Embedded.css";
 
-            var embeddedResourceResolver = new StandardEmbeddedResourceResolver();
+            var embeddedResourceResolver = new StandardEmbeddedResourceResolver(new TempPathProvider());
 
-            var path = embeddedResourceResolver.Resolve(resourcePath);
-            var path2 = embeddedResourceResolver.Resolve(resourcePath);
+            var path = embeddedResourceResolver.ResolveFilename(resourcePath);
+            var path2 = embeddedResourceResolver.ResolveFilename(resourcePath);
 
             Assert.True(path.EndsWith("EmbeddedResource.Embedded.css"));
 
@@ -73,10 +75,10 @@ th {
         {
             var resourcePath = "SquishIt.Tests://RootEmbedded.css";
 
-            var embeddedResourceResolver = new RootEmbeddedResourceResolver();
+            var embeddedResourceResolver = new RootEmbeddedResourceResolver(new TempPathProvider());
 
-            var path = embeddedResourceResolver.Resolve(resourcePath);
-            
+            var path = embeddedResourceResolver.ResolveFilename(resourcePath);
+
             Assert.True(path.EndsWith("RootEmbedded.css"));
 
             Assert.AreEqual(cssContent, File.ReadAllText(path));
@@ -91,10 +93,10 @@ th {
         {
             var resourcePath = "SquishIt.Tests://RootEmbedded.css";
 
-            var embeddedResourceResolver = new RootEmbeddedResourceResolver();
+            var embeddedResourceResolver = new RootEmbeddedResourceResolver(new TempPathProvider());
 
-            var path = embeddedResourceResolver.Resolve(resourcePath);
-            var path2 = embeddedResourceResolver.Resolve(resourcePath);
+            var path = embeddedResourceResolver.ResolveFilename(resourcePath);
+            var path2 = embeddedResourceResolver.ResolveFilename(resourcePath);
 
             Assert.True(path.EndsWith("RootEmbedded.css"));
 
@@ -106,26 +108,6 @@ th {
             TempFileResolutionCache.Clear();
 
             Assert.False(File.Exists(path));
-        }
-
-        [Test]
-        public void ResolveFolder_Standard()
-        {
-            var resolver = new StandardEmbeddedResourceResolver();
-
-            var ex = Assert.Throws<NotImplementedException>(() => resolver.ResolveFolder("", false, "", new string[0], new string[0]));
-
-            Assert.AreEqual("Adding entire directories only supported by FileSystemResolver.", ex.Message);
-        }
-
-        [Test]
-        public void ResolveFolder_Root()
-        {
-            var resolver = new RootEmbeddedResourceResolver();
-
-            var ex = Assert.Throws<NotImplementedException>(() => resolver.ResolveFolder("", false, "", new string[0], new string[0]));
-
-            Assert.AreEqual("Adding entire directories only supported by FileSystemResolver.", ex.Message);
         }
     }
 }

@@ -116,6 +116,9 @@
     <Compile Include="Stubs\StubResolver.cs" />
     <Compile Include="VersionTests.cs" />
     <Compile Include="WebTests.cs" />
+    <Compile Include="Web\HttpContextStub.cs" />
+    <Compile Include="Web\HttpRequestStub.cs" />
+    <Compile Include="Web\HttpResolverStub.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\SquishIt.CoffeeScript\SquishIt.CoffeeScript.csproj">

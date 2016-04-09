@@ -69,7 +69,6 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Web" />
-    <Reference Include="System.Web.Abstractions" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="System.Data" />
@@ -97,13 +96,17 @@
     <Compile Include="Configuration.cs" />
     <Compile Include="Caches\ContentCache.cs" />
     <Compile Include="CSS\RelativePathAdapter.cs" />
-    <Compile Include="HttpContext.cs" />
+    <Compile Include="Files\CompositeInputResolver.cs" />
     <Compile Include="Invalidation\DefaultCacheInvalidationStrategy.cs" />
     <Compile Include="Invalidation\HashAsVirtualDirectoryCacheInvalidationStrategy.cs" />
     <Compile Include="Invalidation\ICacheInvalidationStrategy.cs" />
     <Compile Include="IPathTranslator.cs" />
     <Compile Include="IProcessResult.cs" />
     <Compile Include="ITempPathProvider.cs" />
+    <Compile Include="Resolvers\IDependencyResolver.cs" />
+    <Compile Include="Resolvers\IFolderResolver.cs" />
+    <Compile Include="Resolvers\RootEmbeddedResourceResolver.cs" />
+    <Compile Include="Resolvers\StandardEmbeddedResourceResolver.cs" />
     <Compile Include="TempPathProvider.cs" />
     <Compile Include="Utilities\CriticalRenderingSection.cs" />
     <Compile Include="Extensions.cs" />
@@ -117,11 +120,11 @@
     <Compile Include="Resolvers\EmbeddedResourceResolver.cs" />
     <Compile Include="Resolvers\FileSystemResolver.cs" />
     <Compile Include="Resolvers\HttpResolver.cs" />
-    <Compile Include="Resolvers\IResolver.cs" />
+    <Compile Include="Resolvers\IFileResolver.cs" />
     <Compile Include="Resolvers\ResolverFactory.cs" />
     <Compile Include="Files\DirectoryWrapper.cs" />
     <Compile Include="Files\IDirectoryWrapper.cs" />
-    <Compile Include="Files\Input.cs" />
+    <Compile Include="Files\InputResolver.cs" />
     <Compile Include="JavaScript\JavaScriptBundle.cs" />
     <Compile Include="Minifiers\JavaScript\jsmin\JavaScriptMinifier.cs" />
     <Compile Include="Minifiers\JavaScript\IJavaScriptMinifier.cs" />
@@ -155,15 +158,17 @@
     <Compile Include="Files\IFileWriterFactory.cs" />
     <Compile Include="Utilities\IFilePathMutexProvider.cs" />
     <Compile Include="Utilities\IHasher.cs" />
+    <Compile Include="Web\IHttpContext.cs" />
     <Compile Include="Utilities\IMachineConfigReader.cs" />
     <Compile Include="Utilities\MachineConfigReader.cs" />
-    <Compile Include="PathTranslator.cs" />
     <Compile Include="Utilities\FilePathMutexProvider.cs" />
     <Compile Include="Utilities\SHA1Hasher.cs" />
     <Compile Include="Utilities\TempFileResolutionCache.cs" />
     <Compile Include="Utilities\TrustLevel.cs" />
     <Compile Include="Platform.cs" />
+    <Compile Include="Web\IHttpRequest.cs" />
     <Compile Include="Web\IHttpUtility.cs" />
+    <Compile Include="Web\IServer.cs" />
     <Compile Include="Web\IVirtualPathUtility.cs" />
   </ItemGroup>
   <ItemGroup>

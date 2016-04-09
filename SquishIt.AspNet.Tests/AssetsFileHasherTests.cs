@@ -1,13 +1,14 @@
 ﻿using NUnit.Framework;
-using SquishIt.AspNet.Web;
+using SquishIt.Framework;
 
 namespace SquishIt.AspNet.Tests
 {
     [TestFixture]
     public class AssetsFileHasherTests : SquishIt.Tests.AssetsFileHasherTests
     {
-        public AssetsFileHasherTests() : base(new HttpUtility())
+        public AssetsFileHasherTests() : base(TestConfiguration.Default.DefaultHttpUtility(), TestConfiguration.Default.DefaultPathTranslator())
         {
+            Configuration.Instance = TestConfiguration.Default;
         }
     }
 }

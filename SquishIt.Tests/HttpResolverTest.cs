@@ -7,10 +7,12 @@ using SquishIt.Tests.Helpers;
 
 namespace SquishIt.Tests
 {
+    using Framework;
+
     [TestFixture]
     public class HttpResolverTest
     {
-        string _htmlContent = TestUtilities.NormalizeLineEndings(@"<!doctype html>
+        private readonly string _htmlContent = TestUtilities.NormalizeLineEndings(@"<!doctype html>
 <html>
 <head>
     <title>Example Domain</title>
@@ -61,19 +63,20 @@ namespace SquishIt.Tests
 </body>
 </html>
 ");
+
         [Test]
         public void CanResolveResource()
         {
             var resourcePath = "http://example.com";
 
-            var httpResolver = new HttpResolver();
+            var httpResolver = new HttpResolver(new TempPathProvider());
 
-            var path = httpResolver.Resolve(resourcePath);
+            var path = httpResolver.ResolveFilename(resourcePath);
 
             Assert.AreEqual(_htmlContent, File.ReadAllText(path));
 
             TempFileResolutionCache.Clear();
-            
+
             Assert.False(File.Exists(path));
         }
 
@@ -82,10 +85,10 @@ namespace SquishIt.Tests
         {
             var resourcePath = "http://example.com";
 
-            var embeddedResourceResolver = new HttpResolver();
+            var embeddedResourceResolver = new HttpResolver(new TempPathProvider());
 
-            var path = embeddedResourceResolver.Resolve(resourcePath);
-            var path2 = embeddedResourceResolver.Resolve(resourcePath);
+            var path = embeddedResourceResolver.ResolveFilename(resourcePath);
+            var path2 = embeddedResourceResolver.ResolveFilename(resourcePath);
 
             Assert.AreEqual(_htmlContent, File.ReadAllText(path));
             Assert.AreEqual(_htmlContent, File.ReadAllText(path2));
@@ -95,16 +98,6 @@ namespace SquishIt.Tests
             TempFileResolutionCache.Clear();
 
             Assert.False(File.Exists(path));
-        }
-
-        [Test]
-        public void ResolveFolder_Standard()
-        {
-            var resolver = new StandardEmbeddedResourceResolver();
-
-            var ex = Assert.Throws<NotImplementedException>(() => resolver.ResolveFolder("", false, "", new string[0], new string[0]));
-
-            Assert.AreEqual("Adding entire directories only supported by FileSystemResolver.", ex.Message);
         }
     }
 }
