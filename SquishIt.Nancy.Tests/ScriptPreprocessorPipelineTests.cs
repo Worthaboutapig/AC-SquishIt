@@ -1,6 +1,6 @@
 ﻿using NUnit.Framework;
 
-namespace SquishIt.AspNet.Tests
+namespace SquishIt.Nancy.Tests
 {
     [TestFixture]
     public class ScriptPreprocessorPipelineTests : SquishIt.Tests.ScriptPreprocessorPipelineTests

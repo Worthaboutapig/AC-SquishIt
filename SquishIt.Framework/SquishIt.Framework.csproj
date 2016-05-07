@@ -68,7 +68,7 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Web" />
+    <Reference Include="System.Runtime.Caching" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="System.Data" />
@@ -92,6 +92,8 @@
     <Compile Include="Base\Preprocessor.cs" />
     <Compile Include="Base\ProcessResult.cs" />
     <Compile Include="Bootstrap.cs" />
+    <Compile Include="Caching\ICache.cs" />
+    <Compile Include="Caching\MemoryCache.cs" />
     <Compile Include="Caches\RawContentCache.cs" />
     <Compile Include="Configuration.cs" />
     <Compile Include="Caches\ContentCache.cs" />
@@ -103,8 +105,8 @@
     <Compile Include="IPathTranslator.cs" />
     <Compile Include="IProcessResult.cs" />
     <Compile Include="ITempPathProvider.cs" />
-    <Compile Include="Resolvers\IDependencyResolver.cs" />
     <Compile Include="Resolvers\IFolderResolver.cs" />
+    <Compile Include="Resolvers\IResourceResolver.cs" />
     <Compile Include="Resolvers\RootEmbeddedResourceResolver.cs" />
     <Compile Include="Resolvers\StandardEmbeddedResourceResolver.cs" />
     <Compile Include="TempPathProvider.cs" />
@@ -121,7 +123,6 @@
     <Compile Include="Resolvers\FileSystemResolver.cs" />
     <Compile Include="Resolvers\HttpResolver.cs" />
     <Compile Include="Resolvers\IFileResolver.cs" />
-    <Compile Include="Resolvers\ResolverFactory.cs" />
     <Compile Include="Files\DirectoryWrapper.cs" />
     <Compile Include="Files\IDirectoryWrapper.cs" />
     <Compile Include="Files\InputResolver.cs" />
@@ -158,6 +159,7 @@
     <Compile Include="Files\IFileWriterFactory.cs" />
     <Compile Include="Utilities\IFilePathMutexProvider.cs" />
     <Compile Include="Utilities\IHasher.cs" />
+    <Compile Include="Utilities\ITrustLevel.cs" />
     <Compile Include="Web\IHttpContext.cs" />
     <Compile Include="Utilities\IMachineConfigReader.cs" />
     <Compile Include="Utilities\MachineConfigReader.cs" />

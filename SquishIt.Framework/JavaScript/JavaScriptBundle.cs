@@ -10,6 +10,10 @@ using SquishIt.Framework.Utilities;
 
 namespace SquishIt.Framework.JavaScript
 {
+    using System;
+    using Invalidation;
+    using Renderers;
+
     /// <summary>
     /// JavaScript bundle implementation.
     /// </summary>
@@ -23,10 +27,7 @@ namespace SquishIt.Framework.JavaScript
         bool deferred;
         bool async;
 
-        protected override IMinifier<JavaScriptBundle> DefaultMinifier
-        {
-            get { return Configuration.Instance.DefaultJsMinifier(); }
-        }
+        protected override IMinifier<JavaScriptBundle> DefaultMinifier { get; }
 
         protected override IEnumerable<string> allowedFileExtensions
         {
@@ -48,16 +49,18 @@ namespace SquishIt.Framework.JavaScript
             get { return bundleState.Typeless ? TAG_FORMAT.Replace(" type=\"text/javascript\"", "") : TAG_FORMAT; }
         }
 
-        public JavaScriptBundle(IDebugStatusReader debugStatusReader)
-            : this(debugStatusReader, new FileWriterFactory(Configuration.Instance.DefaultRetryableFileOpener(), 5), new FileReaderFactory(Configuration.Instance.DefaultRetryableFileOpener(), 5), new DirectoryWrapper(), Configuration.Instance.DefaultHasher(), new BundleCache(), new RawContentCache(), Configuration.Instance.DefaultOutputBaseHref(), Configuration.Instance.DefaultPathTranslator(),
-            Configuration.Instance.FileSystemResolver, Configuration.Instance.HttpResolver, Configuration.Instance.RootEmbeddedResourceResolver, Configuration.Instance.StandardEmbeddedResourceResolver)
-        {
-        }
+        //public JavaScriptBundle(IDebugStatusReader debugStatusReader)
+        //    : this(debugStatusReader, new FileWriterFactory(Configuration.Instance.DefaultRetryableFileOpener(), 5), new FileReaderFactory(Configuration.Instance.DefaultRetryableFileOpener(), 5), new DirectoryWrapper(), Configuration.Instance.DefaultHasher(), Configuration.Instance.BundleCache, Configuration.Instance.RawContentCache, Configuration.Instance.DefaultOutputBaseHref(), Configuration.Instance.DefaultPathTranslator(),
+        //    Configuration.Instance.FileSystemResolver, Configuration.Instance.HttpResolver, Configuration.Instance.RootEmbeddedResourceResolver, Configuration.Instance.StandardEmbeddedResourceResolver, Configuration.Instance.VirtualPathRoot)
+        //{
+        //}
 
-        public JavaScriptBundle(IDebugStatusReader debugStatusReader, IFileWriterFactory fileWriterFactory, IFileReaderFactory fileReaderFactory, IDirectoryWrapper directoryWrapper, IHasher hasher, IContentCache bundleCache, IContentCache rawContentCache, string baseOutputHref, IPathTranslator pathTranslator,
-            IFolderResolver fileSystemResolver, IFileResolver httpResolver, IFileResolver rootEmbeddedResourceResolver, IFileResolver standardEmbeddedResourceResolver) :
-            base(fileWriterFactory, fileReaderFactory, debugStatusReader, directoryWrapper, hasher, bundleCache, rawContentCache, baseOutputHref, pathTranslator, fileSystemResolver, httpResolver, rootEmbeddedResourceResolver, standardEmbeddedResourceResolver)
+        public JavaScriptBundle(IDebugStatusReader debugStatusReader, IFileWriterFactory fileWriterFactory, IFileReaderFactory fileReaderFactory, IDirectoryWrapper directoryWrapper, IHasher hasher,
+            IContentCache bundleCache, IContentCache rawContentCache, string baseOutputHref, IPathTranslator pathTranslator,
+            IResourceResolver resourceResolver, IRenderer releaseRenderer, Func<bool> debugPredicate, ICacheInvalidationStrategy cacheInvalidationStrategy, IFilePathMutexProvider filePathMutexProvider, ITrustLevel trustLevel, IMinifier<JavaScriptBundle> javsacriptMinifier, string hashKeyName, string virtualPathRoot) :
+            base(fileWriterFactory, fileReaderFactory, debugStatusReader, directoryWrapper, hasher, bundleCache, rawContentCache, baseOutputHref, pathTranslator, resourceResolver, releaseRenderer, debugPredicate, cacheInvalidationStrategy, filePathMutexProvider, trustLevel, hashKeyName, virtualPathRoot)
         {
+            DefaultMinifier = javsacriptMinifier;
         }
 
         protected override string Template

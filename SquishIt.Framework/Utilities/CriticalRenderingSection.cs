@@ -5,30 +5,28 @@ namespace SquishIt.Framework.Utilities
 {
     public class CriticalRenderingSection : IDisposable
     {
-        // this feels a bit like IDisposable abuse but allows us to code BundleBase in a more mutex-agnostic fashion
-        // probably acceptable alternative for try .. finally though
-        IFilePathMutexProvider mutexProvider;
-        protected IFilePathMutexProvider MutexProvider
-        {
-            get { return mutexProvider ?? (mutexProvider = FilePathMutexProvider.Instance); }
-            set { mutexProvider = value; }
-        }
+        private readonly ITrustLevel _trustLevel;
 
-        readonly Mutex mutex;
-        public CriticalRenderingSection(string path)
+        /// <summary>Initializes a new instance of the <see cref="T:System.Object" /> class.</summary>
+        public CriticalRenderingSection(ITrustLevel trustLevel, IFilePathMutexProvider filePathMutexProvider, string path)
         {
-            if(TrustLevel.IsFullTrust)
+            _trustLevel = trustLevel;
+
+            if (_trustLevel.IsFullTrust)
             {
-                mutex = MutexProvider.GetMutexForPath(path);
-                mutex.WaitOne();
+                _mutex = filePathMutexProvider.GetMutexForPath(path);
+                _mutex.WaitOne();
             }
         }
 
+        // Note: this feels a bit like IDisposable abuse but allows us to code BundleBase in a more mutex-agnostic fashion probably acceptable alternative for try .. finally though
+        private readonly Mutex _mutex;
+
         public void Dispose()
         {
-            if(TrustLevel.IsFullTrust)
+            if (_trustLevel.IsFullTrust)
             {
-                mutex.ReleaseMutex();
+                _mutex.ReleaseMutex();
             }
         }
     }

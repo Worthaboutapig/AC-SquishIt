@@ -1,11 +1,11 @@
 ﻿using NUnit.Framework;
 
-namespace SquishIt.AspNet.Tests
+namespace SquishIt.Nancy.Tests
 {
     [TestFixture]
-    public class ScriptPreprocessorPipelineTests : SquishIt.Tests.ScriptPreprocessorPipelineTests
+    public class HoganTests : SquishIt.Tests.HoganTests
     {
-        public ScriptPreprocessorPipelineTests() : base(
+        public HoganTests() : base(
             TestConfiguration.Default.DefaultOutputBaseHref(),
             TestConfiguration.Default.DefaultPathTranslator(),
             TestConfiguration.Default.FileSystemResolver,

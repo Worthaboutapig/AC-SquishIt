@@ -24,8 +24,8 @@ namespace SquishIt.AspNet
 
 			_virtualPathRoot = virtualVirtualPathRoot;
 			_physicalPathRoot = physicalPathRoot;
-			_httpContext = httpContext ?? Configuration.Instance.DefaultHttpContext();
-			_virtualPathUtility = virtualPathUtility ?? Configuration.Instance.DefaultVirtualPathUtility();
+			_httpContext = httpContext;
+			_virtualPathUtility = virtualPathUtility;
 		}
 
 		public string ResolveAppRelativePathToFileSystem(string file)

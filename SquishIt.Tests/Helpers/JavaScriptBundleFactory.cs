@@ -1,6 +1,9 @@
-using System.Diagnostics.Contracts;
+using System;
 using SquishIt.Framework;
 using SquishIt.Framework.Caches;
+using SquishIt.Framework.Invalidation;
+using SquishIt.Framework.Minifiers;
+using SquishIt.Framework.Renderers;
 using SquishIt.Framework.JavaScript;
 using SquishIt.Framework.Files;
 using SquishIt.Framework.Utilities;
@@ -9,7 +12,7 @@ using SquishIt.Framework.Resolvers;
 
 namespace SquishIt.Tests.Helpers
 {
-    internal class JavaScriptBundleFactory
+    public class JavaScriptBundleFactory
     {
         private IDebugStatusReader _debugStatusReader = new StubDebugStatusReader();
         private IFileWriterFactory _fileWriterFactory = new StubFileWriterFactory();
@@ -21,33 +24,39 @@ namespace SquishIt.Tests.Helpers
 
         private readonly string _baseOutputHref;
         private readonly IPathTranslator _pathTranslator;
-        private readonly IFolderResolver _fileSystemResolver;
-        private readonly IFileResolver _httpResolver;
-        private readonly IFileResolver _rootEmbeddedResourceResolver;
-        private readonly IFileResolver _standardEmbeddedResourceResolver;
+        private readonly IResourceResolver _resourceResolver;
+        private readonly IRenderer _releaseRenderer;
+        private readonly Func<bool> _debugPredicate;
+        private readonly ICacheInvalidationStrategy _cacheInvalidationStrategy;
+        private readonly IMinifier<JavaScriptBundle> _javascriptMinifier;
+        private readonly string _hashKeyName;
+        private readonly string _virtualPathRoot;
+        private readonly IFilePathMutexProvider _filePathMutexProvider;
+        private readonly ITrustLevel _trustLevel;
 
-        public JavaScriptBundleFactory(string baseOutputHref, IPathTranslator pathTranslator, IFolderResolver fileSystemResolver, IFileResolver httpResolver, IFileResolver rootEmbeddedResourceResolver, IFileResolver standardEmbeddedResourceResolver)
+        public JavaScriptBundleFactory(string baseOutputHref,
+                                       IPathTranslator pathTranslator,
+                                       IResourceResolver resourceResolver,
+                                       IRenderer releaseRenderer,
+                                       Func<bool> debugPredicate,
+                                       ICacheInvalidationStrategy cacheInvalidationStrategy,
+                                       IFilePathMutexProvider filePathMutexProvider,
+                                       ITrustLevel trustLevel,
+                                       IMinifier<JavaScriptBundle> javascriptMinifier,
+                                       string hashKeyName,
+                                       string virtualPathRoot)
         {
-            Contract.Requires(baseOutputHref != null);
-            Contract.Requires(pathTranslator != null);
-            Contract.Requires(fileSystemResolver != null);
-            Contract.Requires(httpResolver != null);
-            Contract.Requires(rootEmbeddedResourceResolver != null);
-            Contract.Requires(standardEmbeddedResourceResolver != null);
-
-            Contract.Ensures(_baseOutputHref != null);
-            Contract.Ensures(_pathTranslator != null);
-            Contract.Ensures(_fileSystemResolver != null);
-            Contract.Ensures(_httpResolver != null);
-            Contract.Ensures(_rootEmbeddedResourceResolver != null);
-            Contract.Ensures(_standardEmbeddedResourceResolver != null);
-
             _baseOutputHref = baseOutputHref;
             _pathTranslator = pathTranslator;
-            _fileSystemResolver = fileSystemResolver;
-            _httpResolver = httpResolver;
-            _rootEmbeddedResourceResolver = rootEmbeddedResourceResolver;
-            _standardEmbeddedResourceResolver = standardEmbeddedResourceResolver;
+            _resourceResolver = resourceResolver;
+            _releaseRenderer = releaseRenderer;
+            _debugPredicate = debugPredicate;
+            _cacheInvalidationStrategy = cacheInvalidationStrategy;
+            _filePathMutexProvider = filePathMutexProvider;
+            _trustLevel = trustLevel;
+            _javascriptMinifier = javascriptMinifier;
+            _hashKeyName = hashKeyName;
+            _virtualPathRoot = virtualPathRoot;
         }
 
         public StubFileReaderFactory FileReaderFactory { get { return _fileReaderFactory as StubFileReaderFactory; } }
@@ -85,11 +94,12 @@ namespace SquishIt.Tests.Helpers
 
         public JavaScriptBundle Create()
         {
-            return new JavaScriptBundle(_debugStatusReader, _fileWriterFactory, _fileReaderFactory, _directoryWrapper, _hasher, _contentCache, _rawContentCache, _baseOutputHref, _pathTranslator, _fileSystemResolver, _httpResolver, _rootEmbeddedResourceResolver, _standardEmbeddedResourceResolver);
+            return new JavaScriptBundle(_debugStatusReader, _fileWriterFactory, _fileReaderFactory, _directoryWrapper, _hasher, _contentCache, _rawContentCache, _baseOutputHref, _pathTranslator, _resourceResolver, _releaseRenderer, _debugPredicate, _cacheInvalidationStrategy, _filePathMutexProvider, _trustLevel, _javascriptMinifier, _hashKeyName, _virtualPathRoot);
         }
 
         public JavaScriptBundleFactory WithContents(string css)
         {
+            // Todo: Fix this.
             (_fileReaderFactory as StubFileReaderFactory).SetContents(css);
             return this;
         }

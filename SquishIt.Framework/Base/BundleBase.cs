@@ -41,10 +41,14 @@ namespace SquishIt.Framework.Base
         protected IDebugStatusReader _debugStatusReader;
         protected IDirectoryWrapper directoryWrapper;
         protected IHasher hasher;
+        protected IRenderer releaseRenderer;
         protected string BaseOutputHref { get; set; }
         protected IPathTranslator PathTranslator { get; set; }
+        protected string VirtualPathRoot { get; set; }
 
         private readonly Asset.FilenamesResolver _assetFilenamesResolver;
+        private readonly IFilePathMutexProvider _filePathMutexProvider;
+        private readonly ITrustLevel _trustLevel;
 
         IMinifier<T> minifier;
 
@@ -53,9 +57,17 @@ namespace SquishIt.Framework.Base
         protected BundleBase(IFileWriterFactory fileWriterFactory, IFileReaderFactory fileReaderFactory,
                              IDebugStatusReader debugStatusReader, IDirectoryWrapper directoryWrapper, IHasher hasher,
                              IContentCache bundleCache, IContentCache rawContentCache, string baseOutputHref,
-                             IPathTranslator pathTranslator, IFolderResolver fileSystemResolver, IFileResolver httpResolver,
-                             IFileResolver rootEmbeddedResourceResolver, IFileResolver standardEmbeddedResourceResolver)
+                             IPathTranslator pathTranslator,
+                             IResourceResolver resourceResolver,
+                             IRenderer releaseRenderer,
+                             Func<bool> debugPredicate,
+                             ICacheInvalidationStrategy cacheInvalidationStrategy,
+                             IFilePathMutexProvider filePathMutexProvider,
+                             ITrustLevel trustLevel,
+                             string hashKeyName,
+                             string virtualPathRoot)
         {
+            this.releaseRenderer = releaseRenderer;
             this.fileWriterFactory = fileWriterFactory;
             this.fileReaderFactory = fileReaderFactory;
             _debugStatusReader = debugStatusReader;
@@ -63,16 +75,20 @@ namespace SquishIt.Framework.Base
             this.hasher = hasher;
             bundleState = new BundleState
                           {
-                              DebugPredicate = Configuration.Instance.DefaultDebugPredicate(),
+                              DebugPredicate = debugPredicate,
                               ShouldRenderOnlyIfOutputFileIsMissing = false,
-                              HashKeyName = Configuration.Instance.DefaultHashKeyName(),
-                              CacheInvalidationStrategy = Configuration.Instance.DefaultCacheInvalidationStrategy()
+                              HashKeyName = hashKeyName,
+                              CacheInvalidationStrategy = cacheInvalidationStrategy
                           };
+
             this.bundleCache = bundleCache;
             this.rawContentCache = rawContentCache;
             BaseOutputHref = baseOutputHref;
             PathTranslator = pathTranslator;
-            _assetFilenamesResolver = new Asset.FilenamesResolver(pathTranslator, fileSystemResolver, httpResolver, rootEmbeddedResourceResolver, standardEmbeddedResourceResolver);
+            VirtualPathRoot = virtualPathRoot;
+            _assetFilenamesResolver = new Asset.FilenamesResolver(pathTranslator, resourceResolver);
+            _filePathMutexProvider = filePathMutexProvider;//new FilePathMutexProvider(Configuration.Instance.DefaultHasher(), Configuration.Instance.DefaultPathTranslator())
+            _trustLevel = trustLevel;
         }
 
         //TODO: should this be public?
@@ -84,11 +100,17 @@ namespace SquishIt.Framework.Base
 
         protected IRenderer GetFileRenderer()
         {
-            return IsDebuggingEnabled()
-                ? new FileRenderer(fileWriterFactory)
-                : bundleState.ReleaseFileRenderer ??
-                  Configuration.Instance.DefaultReleaseRenderer() ??
-                  new FileRenderer(fileWriterFactory);
+            IRenderer fileRenderer;
+            if (IsDebuggingEnabled())
+            {
+                fileRenderer = new FileRenderer(fileWriterFactory);
+            }
+            else
+            {
+                fileRenderer = bundleState.ReleaseFileRenderer ?? this.releaseRenderer ?? new FileRenderer(fileWriterFactory);
+            }
+
+            return fileRenderer;
         }
 
         void AddAsset(Asset asset)

@@ -2,53 +2,17 @@
 
 namespace SquishIt.Framework.Utilities
 {
-    public interface ITrustLevel
+    internal class TrustLevel : ITrustLevel
     {
-        AspNetHostingPermissionLevel CurrentTrustLevel { get; }
-    }
-
-    class TrustLevel : ITrustLevel
-    {
-        internal static ITrustLevel instance;
-        static ITrustLevel Instance
-        {
-            get { return instance ?? (instance = new TrustLevel()); }
-        }
-
-        public static bool IsFullTrust
-        {
-            get
-            {
-                return Instance.CurrentTrustLevel == AspNetHostingPermissionLevel.Unrestricted;
-            }
-        }
-
-        public static bool IsHighOrUnrestrictedTrust
-        {
-            get
-            {
-                return Instance.CurrentTrustLevel == AspNetHostingPermissionLevel.High ||
-                    Instance.CurrentTrustLevel == AspNetHostingPermissionLevel.Unrestricted;
-            }
-        }
-
-        AspNetHostingPermissionLevel? trustLevel;
-
         public AspNetHostingPermissionLevel CurrentTrustLevel
         {
             get
             {
-                if (trustLevel == null)
+                if (_trustLevel == null)
                 {
                     var lastTrustedLevel = AspNetHostingPermissionLevel.None;
 
-                    foreach (var level in new[] {
-                                          AspNetHostingPermissionLevel.Minimal,
-                                          AspNetHostingPermissionLevel.Low,
-                                          AspNetHostingPermissionLevel.Medium,
-                                          AspNetHostingPermissionLevel.High,
-                                          AspNetHostingPermissionLevel.Unrestricted
-                                      })
+                    foreach (var level in AspNetHostingPermissionLevels)
                     {
                         try
                         {
@@ -61,9 +25,34 @@ namespace SquishIt.Framework.Utilities
                         }
                     }
 
-                    trustLevel = lastTrustedLevel;
+                    _trustLevel = lastTrustedLevel;
                 }
-                return trustLevel.Value;
+
+                return _trustLevel.Value;
+            }
+        }
+
+        private AspNetHostingPermissionLevel? _trustLevel;
+        private static readonly AspNetHostingPermissionLevel[] AspNetHostingPermissionLevels = {
+                                                              AspNetHostingPermissionLevel.Minimal,
+                                                              AspNetHostingPermissionLevel.Low,
+                                                              AspNetHostingPermissionLevel.Medium,
+                                                              AspNetHostingPermissionLevel.High,
+                                                              AspNetHostingPermissionLevel.Unrestricted
+                                                          };
+        public bool IsFullTrust
+        {
+            get
+            {
+                return CurrentTrustLevel == AspNetHostingPermissionLevel.Unrestricted;
+            }
+        }
+
+        public bool IsHighOrUnrestrictedTrust
+        {
+            get
+            {
+                return CurrentTrustLevel == AspNetHostingPermissionLevel.High || IsFullTrust;
             }
         }
     }

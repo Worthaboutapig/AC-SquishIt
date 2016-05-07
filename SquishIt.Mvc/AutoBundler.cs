@@ -11,40 +11,47 @@ using HttpContext = System.Web.HttpContext;
 
 namespace SquishIt.Mvc
 {
-    /// <summary>
+	using Framework.Files;
+
+	/// <summary>
     /// Manages a bundle of .js and/or .css specific to the specified ViewPage
     /// </summary>
     public class AutoBundler
     {
         public static AutoBundlingBehavior Behavior { get; set; }
 
-        private IHasher _hasher = Configuration.Instance.DefaultHasher();
-        private static readonly IDebugStatusReader _debugStatusReader;
+        private readonly IHasher _hasher = new Hasher(new RetryableFileOpener());
+		private static readonly IDebugStatusReader _debugStatusReader;
+		private static readonly Func<CSSBundle> _cssBundle;
+		private static readonly Func<JavaScriptBundle> _javascriptBundle;
 
-        static AutoBundler()
-        {
-            var machineConfigReader = new MachineConfigReader();
-            var httpContext = new AspNet.Web.HttpContext(HttpContext.Current);
-            _debugStatusReader = new DebugStatusReader(machineConfigReader, httpContext);
+		static AutoBundler()
+		{
+			var machineConfigReader = new MachineConfigReader();
+			var httpContext = new AspNet.Web.HttpContext(HttpContext.Current);
+			var debugStatusReader = new DebugStatusReader(machineConfigReader, httpContext);
 
-            Behavior = new AutoBundlingBehavior
-            {
-                FilenameFormat = "{0}{1}{2}",
-                ResourceLocation = "~/assets/",
-                RenderingDelegate = (b, n) => b.Render(n),
-                // Since some resource types contain paths relative to the current location,
-                // we offer the option of splitting bundles on path boundaries.
-                KeepScriptsInOriginalFolder = false,
-                // Grouping bundle content by folder can result in content order changes
-                // For example, [  "/a/css1", "/b/css2",   "/a/css3"  ]
-                // may become   [ ["/a/css1", "/a/css3"], ["/b/css2"] ]
-                // for that reason these should be off be default
-                // Note that SquishIt does support relocating CSS url() paths.
-                KeepStylesInOriginalFolder = true,
-            };
-        }
+			Behavior = new AutoBundlingBehavior
+			           {
+				           FilenameFormat = "{0}{1}{2}",
+				           ResourceLocation = "~/assets/",
+				           RenderingDelegate = (b, n) => b.Render(n),
+				           // Since some resource types contain paths relative to the current location,
+				           // we offer the option of splitting bundles on path boundaries.
+				           KeepScriptsInOriginalFolder = false,
+				           // Grouping bundle content by folder can result in content order changes
+				           // For example, [  "/a/css1", "/b/css2",   "/a/css3"  ]
+				           // may become   [ ["/a/css1", "/a/css3"], ["/b/css2"] ]
+				           // for that reason these should be off be default
+				           // Note that SquishIt does support relocating CSS url() paths.
+				           KeepStylesInOriginalFolder = true,
+			           };
 
-        // It might be nice to allow multiple link queues to be named,
+			_cssBundle = () => new CSSBundle(debugStatusReader);
+			_javascriptBundle = () => new JavaScriptBundle(debugStatusReader);
+		}
+
+		// It might be nice to allow multiple link queues to be named,
         // for example one for the head and another for the tail of body
         /// <summary>
         /// Get the cached AutoBundler for this HTTP context,
@@ -97,7 +104,7 @@ namespace SquishIt.Mvc
         /// <param name="resourceFiles">Zero or more project paths to JavaScript files</param>
         public void AddStyleResources(string viewPath, params string[] resourceFiles)
         {
-            AddBundles(() => Bundle.Css(_debugStatusReader), viewPath, Behavior.KeepStylesInOriginalFolder, STYLE_BUNDLE_EXTENSION, resourceFiles);
+            AddBundles(() => _cssBundle(), viewPath, Behavior.KeepStylesInOriginalFolder, STYLE_BUNDLE_EXTENSION, resourceFiles);
         }
 
         /// <summary>
@@ -106,7 +113,7 @@ namespace SquishIt.Mvc
         /// <param name="resourceFiles">Zero or more project paths to JavaScript files</param>
         public void AddScriptResources(string viewPath, params string[] resourceFiles)
         {
-            AddBundles(() => Bundle.JavaScript(_debugStatusReader), viewPath, Behavior.KeepScriptsInOriginalFolder, SCRIPT_BUNDLE_EXTENSION, resourceFiles);
+            AddBundles(() => _javascriptBundle(), viewPath, Behavior.KeepScriptsInOriginalFolder, SCRIPT_BUNDLE_EXTENSION, resourceFiles);
         }
 
         private void AddBundles<bT>(Func<BundleBase<bT>> newBundleFunc, string viewPath, bool originalFolder, string bundleExtension, string[] resourceFiles) where bT : BundleBase<bT>

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -10,6 +11,8 @@ using SquishIt.Framework.Resolvers;
 using SquishIt.Framework.Files;
 using SquishIt.Framework.Utilities;
 using SquishIt.Framework.Web;
+using SquishIt.Framework.Invalidation;
+using SquishIt.Framework.Renderers;
 
 namespace SquishIt.Framework.CSS
 {
@@ -18,7 +21,7 @@ namespace SquishIt.Framework.CSS
     /// </summary>
     public class CSSBundle : BundleBase<CSSBundle>
     {
-        readonly static Regex IMPORT_PATTERN = new Regex(@"@import +url\(([""']){0,1}(.*?)\1{0,1}\);", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        static readonly Regex IMPORT_PATTERN = new Regex(@"@import +url\(([""']){0,1}(.*?)\1{0,1}\);", RegexOptions.Compiled | RegexOptions.IgnoreCase);
         const string CSS_TEMPLATE = "<link rel=\"stylesheet\" type=\"text/css\" {0}href=\"{1}\" />";
         const string CACHE_PREFIX = "css";
         const string TAG_FORMAT = "<style type=\"text/css\">{0}</style>";
@@ -38,10 +41,7 @@ namespace SquishIt.Framework.CSS
             get { return CACHE_PREFIX; }
         }
 
-        protected override IMinifier<CSSBundle> DefaultMinifier
-        {
-            get { return Configuration.Instance.DefaultCssMinifier(); }
-        }
+        protected override IMinifier<CSSBundle> DefaultMinifier { get; }
 
         protected override IEnumerable<string> allowedFileExtensions
         {
@@ -63,17 +63,19 @@ namespace SquishIt.Framework.CSS
             get { return bundleState.Typeless ? TAG_FORMAT.Replace(" type=\"text/css\"", "") : TAG_FORMAT; }
         }
 
-        public CSSBundle(IDebugStatusReader debugStatusReader)
-            : this(debugStatusReader, new FileWriterFactory(Configuration.Instance.DefaultRetryableFileOpener(), 5), new FileReaderFactory(Configuration.Instance.DefaultRetryableFileOpener(), 5), new DirectoryWrapper(), Configuration.Instance.DefaultHasher(), new BundleCache(), new RawContentCache(), Configuration.Instance.DefaultHttpUtility(), Configuration.Instance.DefaultOutputBaseHref(), Configuration.Instance.DefaultPathTranslator(),
-                  Configuration.Instance.FileSystemResolver, Configuration.Instance.HttpResolver, Configuration.Instance.RootEmbeddedResourceResolver, Configuration.Instance.StandardEmbeddedResourceResolver)
-        {
-        }
+        //public CSSBundle(IDebugStatusReader debugStatusReader)
+        //    : this(debugStatusReader, new FileWriterFactory(Configuration.Instance.DefaultRetryableFileOpener(), 5), new FileReaderFactory(Configuration.Instance.DefaultRetryableFileOpener(), 5), new DirectoryWrapper(), Configuration.Instance.DefaultHasher(), Configuration.Instance.BundleCache, Configuration.Instance.RawContentCache, Configuration.Instance.DefaultHttpUtility(), Configuration.Instance.DefaultOutputBaseHref(), Configuration.Instance.DefaultPathTranslator(),
+        //          Configuration.Instance.FileSystemResolver, Configuration.Instance.HttpResolver, Configuration.Instance.RootEmbeddedResourceResolver, Configuration.Instance.StandardEmbeddedResourceResolver, Configuration.Instance.VirtualPathRoot)
+        //{
+        //}
 
         public CSSBundle(IDebugStatusReader debugStatusReader, IFileWriterFactory fileWriterFactory, IFileReaderFactory fileReaderFactory, IDirectoryWrapper directoryWrapper, IHasher hasher, IContentCache bundleCache, IContentCache rawContentCache, IHttpUtility httpUtility, string baseOutputHref, IPathTranslator pathTranslator,
-            IFolderResolver fileSystemResolver, IFileResolver httpResolver, IFileResolver rootEmbeddedResourceResolver, IFileResolver standardEmbeddedResourceResolver)
-            : base(fileWriterFactory, fileReaderFactory, debugStatusReader, directoryWrapper, hasher, bundleCache, rawContentCache, baseOutputHref, pathTranslator, fileSystemResolver, httpResolver, rootEmbeddedResourceResolver, standardEmbeddedResourceResolver)
+            IResourceResolver resourceResolver, IRenderer releaseRenderer, Func<bool> debugPredicate, ICacheInvalidationStrategy cacheInvalidationStrategy, IFilePathMutexProvider filePathMutexProvider, ITrustLevel trustLevel, IMinifier<CSSBundle> cssMinifier, string hashKeyName, string virtualPathRoot)
+            : base(fileWriterFactory, fileReaderFactory, debugStatusReader, directoryWrapper, hasher, bundleCache, rawContentCache, baseOutputHref, pathTranslator, resourceResolver, releaseRenderer, debugPredicate, cacheInvalidationStrategy, filePathMutexProvider, trustLevel, hashKeyName, virtualPathRoot)
         {
             this.httpUtility = httpUtility;
+            DefaultMinifier = cssMinifier;
+
         }
 
         string ProcessImport(string file, string outputFile, string css)
@@ -85,12 +87,14 @@ namespace SquishIt.Framework.CSS
             return IMPORT_PATTERN.Replace(css, match =>
             {
                 var importPath = match.Groups[2].Value;
-                string import;
-                import = importPath.StartsWith("/")
+                var import = importPath.StartsWith("/")
                     ? PathTranslator.ResolveAppRelativePathToFileSystem(importPath)
                     : PathTranslator.ResolveAppRelativePathToFileSystem(sourcePath + importPath);
                 bundleState.DependentFiles.Add(import);
-                return ProcessCssFile(import, outputFile, import, true);
+
+                var processCssFile = ProcessCssFile(import, outputFile, import, true);
+
+                return processCssFile;
             });
         }
 

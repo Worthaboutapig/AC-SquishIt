@@ -1,11 +1,7 @@
 ﻿using System;
-using System.Diagnostics.Contracts;
 using NUnit.Framework;
-using SquishIt.Framework;
 using SquishIt.Framework.Files;
-using SquishIt.Framework.Resolvers;
 using SquishIt.Framework.Utilities;
-using SquishIt.Framework.Web;
 using SquishIt.Sass;
 using SquishIt.Tests.Helpers;
 using SquishIt.Tests.Stubs;
@@ -15,8 +11,8 @@ namespace SquishIt.Tests
     [TestFixture(Category = "IgnoreCI", Description = "Assembly loading issues on build server.")]
     public abstract class SassTests
     {
-        CssBundleFactory cssBundleFactory;
-        IHasher hasher;
+        private readonly Func<CssBundleFactory> _cssBundleFactoryCreator;
+
         string scss = @"$blue: #3bbfce;
                     $margin: 16px;
 
@@ -42,9 +38,9 @@ $margin: 16px
     padding: $margin / 2
     margin: $margin / 2
     border-color: $blue";
-        string renderedCss = @".content-navigation{border-color:#3bbfce;color:#2ca2af}.border{padding:8px;margin:8px;border-color:#3bbfce}";
-        string debugRenderedCss = TestUtilities.NormalizeLineEndings(
-                    @"<style type=""text/css"">.content-navigation {
+        private const string RenderedCss = @".content-navigation{border-color:#3bbfce;color:#2ca2af}.border{padding:8px;margin:8px;border-color:#3bbfce}";
+        private readonly string _debugRenderedCss = TestUtilities.NormalizeLineEndings(
+            @"<style type=""text/css"">.content-navigation {
   border-color: #3bbfce;
   color: #2ca2af; }
 
@@ -52,49 +48,11 @@ $margin: 16px
   padding: 8px;
   margin: 8px;
   border-color: #3bbfce; }
-</style>") + Environment.NewLine;//account for stringbuilder
+</style>") + Environment.NewLine; //account for stringbuilder
 
-        private readonly IHttpUtility _httpUtility;
-        private readonly string _baseOutputHref;
-        private readonly IPathTranslator _pathTranslator;
-        private readonly FileSystemResolver _fileSystemResolver;
-        private readonly HttpResolver _httpResolver;
-        private readonly RootEmbeddedResourceResolver _rootEmbeddedResourceResolver;
-        private readonly StandardEmbeddedResourceResolver _standardEmbeddedResourceResolver;
-
-        protected SassTests(IHttpUtility httpUtility, string baseOutputHref, IPathTranslator pathTranslator, FileSystemResolver fileSystemResolver, HttpResolver httpResolver, RootEmbeddedResourceResolver rootEmbeddedResourceResolver, StandardEmbeddedResourceResolver standardEmbeddedResourceResolver)
+        protected SassTests(Func<CssBundleFactory> cssBundleFactoryCreator)
         {
-            Contract.Requires(httpUtility != null);
-            Contract.Requires(baseOutputHref != null);
-            Contract.Requires(pathTranslator != null);
-            Contract.Requires(fileSystemResolver != null);
-            Contract.Requires(httpResolver != null);
-            Contract.Requires(rootEmbeddedResourceResolver != null);
-            Contract.Requires(standardEmbeddedResourceResolver != null);
-
-
-            Contract.Ensures(_httpUtility != null); Contract.Ensures(_baseOutputHref != null);
-            Contract.Ensures(_pathTranslator != null);
-            Contract.Ensures(_fileSystemResolver != null);
-            Contract.Ensures(_httpResolver != null);
-            Contract.Ensures(_rootEmbeddedResourceResolver != null);
-            Contract.Ensures(_standardEmbeddedResourceResolver != null);
-
-            _httpUtility = httpUtility;
-            _baseOutputHref = baseOutputHref;
-            _pathTranslator = pathTranslator;
-            _fileSystemResolver = fileSystemResolver;
-            _httpResolver = httpResolver;
-            _rootEmbeddedResourceResolver = rootEmbeddedResourceResolver;
-            _standardEmbeddedResourceResolver = standardEmbeddedResourceResolver;
-        }
-
-        [SetUp]
-        public void Setup()
-        {
-            cssBundleFactory = new CssBundleFactory(_httpUtility, _baseOutputHref, _pathTranslator, _fileSystemResolver, _httpResolver, _rootEmbeddedResourceResolver, _standardEmbeddedResourceResolver);
-            var retryableFileOpener = new RetryableFileOpener();
-            hasher = new Hasher(retryableFileOpener);
+            _cssBundleFactoryCreator = cssBundleFactoryCreator;
         }
 
         [Test]
@@ -102,55 +60,52 @@ $margin: 16px
         {
             using (new StylePreprocessorScope<SassPreprocessor>())
             {
-                var cssBundle = cssBundleFactory
-                    .WithHasher(hasher)
+                var cssBundle = _cssBundleFactoryCreator()
+                    .WithHasher(new Hasher(new RetryableFileOpener()))
                     .WithDebuggingEnabled(false)
                     .WithContents(scss)
                     .Create();
 
-                string tag = cssBundle
+                var tag = cssBundle
                     .Add("~/css/test.scss")
                     .Render("~/css/output.css");
 
-                string contents =
-                    cssBundleFactory.FileWriterFactory.Files[TestUtilities.PrepareRelativePath(@"css\output.css")];
+                var contents =
+                    _cssBundleFactoryCreator().FileWriterFactory.Files[TestUtilities.PrepareRelativePath(@"css\output.css")];
 
-                Assert.AreEqual(
-                    @"<link rel=""stylesheet"" type=""text/css"" href=""css/output.css?r=5C851B7837C923C399A44B1F5BF9F14A"" />",
-                    tag);
-                Assert.AreEqual(renderedCss, contents);
+                Assert.AreEqual(@"<link rel=""stylesheet"" type=""text/css"" href=""css/output.css?r=5C851B7837C923C399A44B1F5BF9F14A"" />", tag);
+                Assert.AreEqual(RenderedCss, contents);
             }
         }
-
 
         [Test]
         public void CanBundleCssWithArbitraryScss()
         {
-            using(new StylePreprocessorScope<SassPreprocessor>())
+            using (new StylePreprocessorScope<SassPreprocessor>())
             {
-                var cssBundle = cssBundleFactory
-                    .WithHasher(hasher)
+                var cssBundle = _cssBundleFactoryCreator()
+                    .WithHasher(new Hasher(new RetryableFileOpener()))
                     .WithDebuggingEnabled(false)
                     .Create();
 
-                string tag = cssBundle
+                var tag = cssBundle
                     .AddString(scss, ".scss")
                     .Render("~/css/output.css");
 
-                string contents = cssBundleFactory.FileWriterFactory.Files[TestUtilities.PrepareRelativePath(@"css\output.css")];
+                var contents = _cssBundleFactoryCreator().FileWriterFactory.Files[TestUtilities.PrepareRelativePath(@"css\output.css")];
 
                 Assert.AreEqual(@"<link rel=""stylesheet"" type=""text/css"" href=""css/output.css?r=5C851B7837C923C399A44B1F5BF9F14A"" />", tag);
-                Assert.AreEqual(renderedCss, contents);
+                Assert.AreEqual(RenderedCss, contents);
             }
         }
 
         [Test]
         public void CanBundleCssInDebugWithArbitraryScss()
         {
-            using(new StylePreprocessorScope<SassPreprocessor>())
+            using (new StylePreprocessorScope<SassPreprocessor>())
             {
-                var cssBundle = cssBundleFactory
-                    .WithHasher(hasher)
+                var cssBundle = _cssBundleFactoryCreator()
+                    .WithHasher(new Hasher(new RetryableFileOpener()))
                     .WithDebuggingEnabled(true)
                     .Create();
 
@@ -158,7 +113,7 @@ $margin: 16px
                     .AddString(scss, ".scss")
                     .Render("~/css/output.css");
 
-                Assert.AreEqual(debugRenderedCss, tag);
+                Assert.AreEqual(_debugRenderedCss, tag);
             }
         }
 
@@ -167,61 +122,61 @@ $margin: 16px
         {
             using (new StylePreprocessorScope<SassPreprocessor>())
             {
-                var cssBundle = cssBundleFactory
-                    .WithHasher(hasher)
+                var cssBundle = _cssBundleFactoryCreator()
+                    .WithHasher(new Hasher(new RetryableFileOpener()))
                     .WithDebuggingEnabled(false)
                     .WithContents(sass)
                     .Create();
 
-                string tag = cssBundle
+                var tag = cssBundle
                     .Add("~/css/test.sass")
                     .Render("~/css/output.css");
 
-                string contents =
-                    cssBundleFactory.FileWriterFactory.Files[TestUtilities.PrepareRelativePath(@"css\output.css")];
+                var contents =
+                    _cssBundleFactoryCreator().FileWriterFactory.Files[TestUtilities.PrepareRelativePath(@"css\output.css")];
 
                 Assert.AreEqual(@"<link rel=""stylesheet"" type=""text/css"" href=""css/output.css?r=5C851B7837C923C399A44B1F5BF9F14A"" />", tag);
-                Assert.AreEqual(renderedCss, contents);
+                Assert.AreEqual(RenderedCss, contents);
             }
         }
 
         [Test, Platform(Exclude = "Unix, Linux, Mono")]
         public void CanBundleCssWithArbitrarySass()
         {
-            using(new StylePreprocessorScope<SassPreprocessor>())
+            using (new StylePreprocessorScope<SassPreprocessor>())
             {
-                var cssBundle = cssBundleFactory
-                    .WithHasher(hasher)
+                var cssBundle = _cssBundleFactoryCreator()
+                    .WithHasher(new Hasher(new RetryableFileOpener()))
                     .WithDebuggingEnabled(false)
                     .Create();
 
-                string tag = cssBundle
+                var tag = cssBundle
                     .AddString(sass, ".sass")
                     .Render("~/css/output.css");
 
-                string contents =
-                    cssBundleFactory.FileWriterFactory.Files[TestUtilities.PrepareRelativePath(@"css\output.css")];
+                var contents =
+                    _cssBundleFactoryCreator().FileWriterFactory.Files[TestUtilities.PrepareRelativePath(@"css\output.css")];
 
                 Assert.AreEqual(@"<link rel=""stylesheet"" type=""text/css"" href=""css/output.css?r=5C851B7837C923C399A44B1F5BF9F14A"" />", tag);
-                Assert.AreEqual(renderedCss, contents);
+                Assert.AreEqual(RenderedCss, contents);
             }
         }
 
         [Test, Platform(Exclude = "Unix, Linux, Mono")]
         public void CanBundleCssInDebugWithArbitrarySass()
         {
-            using(new StylePreprocessorScope<SassPreprocessor>())
+            using (new StylePreprocessorScope<SassPreprocessor>())
             {
-                var cssBundle = cssBundleFactory
-                    .WithHasher(hasher)
+                var cssBundle = _cssBundleFactoryCreator()
+                    .WithHasher(new Hasher(new RetryableFileOpener()))
                     .WithDebuggingEnabled(true)
                     .Create();
 
-                string tag = cssBundle
+                var tag = cssBundle
                     .AddString(sass, ".sass")
                     .Render("~/css/output.css");
 
-                Assert.AreEqual(debugRenderedCss, tag);
+                Assert.AreEqual(_debugRenderedCss, tag);
             }
         }
 
@@ -249,8 +204,8 @@ $margin: 16px
                 var expected =
                     @"table.hl{margin:2em 0}table.hl td.ln{text-align:right}li{font-family:serif;font-weight:bold;font-size:1.2em}";
 
-                var cssBundle = cssBundleFactory
-                    .WithHasher(hasher)
+                var cssBundle = _cssBundleFactoryCreator()
+                    .WithHasher(new Hasher(new RetryableFileOpener()))
                     .WithDebuggingEnabled(false)
                     .WithContents(original)
                     .Create();
@@ -259,8 +214,8 @@ $margin: 16px
                     .Add("~/css/test.scss")
                     .Render("~/css/output.css");
 
-                string contents =
-                    cssBundleFactory.FileWriterFactory.Files[TestUtilities.PrepareRelativePath(@"css\output.css")];
+                var contents =
+                    _cssBundleFactoryCreator().FileWriterFactory.Files[TestUtilities.PrepareRelativePath(@"css\output.css")];
                 Assert.AreEqual(expected, contents);
             }
         }
@@ -292,8 +247,8 @@ $margin: 16px
                 var expected =
                     @"#data{float:left;margin-left:10px}#data th{text-align:center;font-weight:bold}#data td,#data th{padding:2px}";
 
-                var cssBundle = cssBundleFactory
-                    .WithHasher(hasher)
+                var cssBundle = _cssBundleFactoryCreator()
+                    .WithHasher(new Hasher(new RetryableFileOpener()))
                     .WithDebuggingEnabled(false)
                     .WithContents(original)
                     .Create();
@@ -302,8 +257,8 @@ $margin: 16px
                     .Add("~/css/test.scss")
                     .Render("~/css/output.css");
 
-                string contents =
-                    cssBundleFactory.FileWriterFactory.Files[TestUtilities.PrepareRelativePath(@"css\output.css")];
+                var contents =
+                    _cssBundleFactoryCreator().FileWriterFactory.Files[TestUtilities.PrepareRelativePath(@"css\output.css")];
                 Assert.AreEqual(expected, contents);
             }
         }
@@ -313,8 +268,7 @@ $margin: 16px
         {
             using (new StylePreprocessorScope<SassPreprocessor>())
             {
-                var original =
-                    @".error {
+                const string original = @".error {
                       border: 1px #f00;
                       background: #fdd;
                     }
@@ -328,11 +282,10 @@ $margin: 16px
                       border-width: 3px;
                     }";
 
-                var expected =
-                    @".error,.badError{border:1px #f00;background:#fdd}.error.intrusion,.intrusion.badError{font-size:1.3em;font-weight:bold}.badError{border-width:3px}";
+                const string expected = @".error,.badError{border:1px #f00;background:#fdd}.error.intrusion,.intrusion.badError{font-size:1.3em;font-weight:bold}.badError{border-width:3px}";
 
-                var cssBundle = cssBundleFactory
-                    .WithHasher(hasher)
+                var cssBundle = _cssBundleFactoryCreator()
+                    .WithHasher(new Hasher(new RetryableFileOpener()))
                     .WithDebuggingEnabled(false)
                     .WithContents(original)
                     .Create();
@@ -341,8 +294,8 @@ $margin: 16px
                     .Add("~/css/test.scss")
                     .Render("~/css/output.css");
 
-                string contents =
-                    cssBundleFactory.FileWriterFactory.Files[TestUtilities.PrepareRelativePath(@"css\output.css")];
+                var contents =
+                    _cssBundleFactoryCreator().FileWriterFactory.Files[TestUtilities.PrepareRelativePath(@"css\output.css")];
 
                 Assert.AreEqual(expected, contents);
             }

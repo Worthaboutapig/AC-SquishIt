@@ -7,7 +7,7 @@ namespace SquishIt.Tests.Stubs
     {
         string contents;
         bool fileExists;
-        Dictionary<string, string> contentsForFiles = new Dictionary<string, string>();
+        readonly Dictionary<string, string> contentsForFiles = new Dictionary<string, string>();
 
         public void SetContents(string contents)
         {

@@ -8,14 +8,14 @@ namespace SquishIt.Tests.Helpers
 {
     public class TestUtilities
     {
-        static readonly Regex driveLetter = new Regex(@"[a-zA-Z]{1}:\\");
+        private static readonly Regex DriveLetter = new Regex(@"[a-zA-Z]{1}:\\");
 
         public static string PreparePath(string windowsPath)
         {
             var path = windowsPath;
             if (Platform.Unix)
             {
-                path = driveLetter.Replace(path, @"/")
+                path = DriveLetter.Replace(path, @"/")
                     .Replace(@"\", @"/");
             }
             return path;
@@ -24,7 +24,8 @@ namespace SquishIt.Tests.Helpers
         public static string PrepareRelativePath(string path)
         {
             var directorySeparator = Path.DirectorySeparatorChar.ToString();
-            return Environment.CurrentDirectory + (path.StartsWith(directorySeparator) ? "" : directorySeparator) + PreparePath(path);
+            var prepareRelativePath = Path.Combine(Environment.CurrentDirectory, path.StartsWith(directorySeparator) ? "" : directorySeparator, PreparePath(path));
+            return prepareRelativePath;
         }
 
         public static string NormalizeLineEndings(string contents)
@@ -36,7 +37,12 @@ namespace SquishIt.Tests.Helpers
 
         public static string CreateFile(string path, string contents)
         {
-            (new FileInfo(path)).Directory.Create();
+            if (path == null)
+            {
+                throw new ArgumentNullException("path");
+            }
+
+            new FileInfo(path).Directory.Create();
             using (var file = File.Create(path))
             {
                 var bytes = Encoding.UTF8.GetBytes(contents);

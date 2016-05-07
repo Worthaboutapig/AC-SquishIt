@@ -33,7 +33,9 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
+    <Reference Include="System.Runtime.Caching" />
     <Reference Include="System.Web" />
+    <Reference Include="System.Web.Abstractions" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DefaultConfiguration.cs" />

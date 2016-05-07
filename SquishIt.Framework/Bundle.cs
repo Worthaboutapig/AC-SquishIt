@@ -125,40 +125,5 @@ namespace SquishIt.Framework
             AllowedScriptExtensions.Add(".JS");
             AllowedStyleExtensions.Add(".CSS");
         }
-
-        /// <summary>
-        /// Create a javascript bundle.
-        /// </summary>
-        /// <param name="debugStatusReader"><see cref="IDebugStatusReader">IDebugStatusReader</see> instance to use.</param>
-        /// <returns><see cref="JavaScriptBundle">JavaScriptBundle</see></returns>
-        public static JavaScriptBundle JavaScript(IDebugStatusReader debugStatusReader)
-        {
-            Contract.Requires(debugStatusReader != null);
-
-            Contract.Ensures(Contract.Result<JavaScriptBundle>() != null);
-
-            var javaScriptBundle = new JavaScriptBundle(debugStatusReader);
-
-            return javaScriptBundle;
-        }
-
-        /// <summary>
-        /// Create a CSS bundle with non default <see cref="IDebugStatusReader">IDebugStatusReader</see>.
-        /// </summary>
-        /// <param name="debugStatusReader"><see cref="IDebugStatusReader">IDebugStatusReader</see> instance to use.</param>
-        /// <returns><see cref="CSSBundle">CSSBundle</see></returns>
-        public static CSSBundle Css(IDebugStatusReader debugStatusReader)
-        {
-            return new CSSBundle(debugStatusReader);
-        }
-
-        /// <summary>
-        /// Provides access to a mutable static configuration.  Changes made to this configuration will be applied to all future bundles created.
-        /// </summary>
-        /// <returns><see cref="Configuration">Configuration</see></returns>
-        public static Configuration ConfigureDefaults()
-        {
-            return Configuration.Instance;
-        }
     }
 }

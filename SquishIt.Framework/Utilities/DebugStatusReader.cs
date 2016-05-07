@@ -1,10 +1,8 @@
 using System;
+using SquishIt.Framework.Web;
 
 namespace SquishIt.Framework.Utilities
 {
-    using System.Diagnostics.Contracts;
-    using Web;
-
     /// <summary>
     /// Sets and retrieves the current debug status.
     /// </summary>
@@ -14,22 +12,18 @@ namespace SquishIt.Framework.Utilities
         private readonly IHttpContext _httpContext;
         private bool _forceDebug;
         private bool _forceRelease;
+        private readonly ITrustLevel _trustLevel;
 
         /// <summary>
         /// Initialises the reader with the provided values.
         /// </summary>
         /// <param name="machineConfigReader">The machine configuration reader.</param>
         /// <param name="httpContext">The HTTP context.</param>
-        public DebugStatusReader(IMachineConfigReader machineConfigReader, IHttpContext httpContext)
+        public DebugStatusReader(IMachineConfigReader machineConfigReader, IHttpContext httpContext, ITrustLevel trustLevel)
         {
-            Contract.Requires(machineConfigReader != null);
-            Contract.Requires(httpContext != null);
-
-            Contract.Ensures(_machineConfigReader != null);
-            Contract.Ensures(_httpContext != null);
-
             _machineConfigReader = machineConfigReader;
             _httpContext = httpContext;
+            _trustLevel = trustLevel;
         }
 
         /// <summary>
@@ -51,7 +45,7 @@ namespace SquishIt.Framework.Utilities
 
             if (_httpContext != null && _httpContext.IsDebuggingEnabled)
             {
-                var isDebuggingEnabled = !TrustLevel.IsHighOrUnrestrictedTrust || _machineConfigReader.IsNotRetailDeployment;
+                var isDebuggingEnabled = !_trustLevel.IsHighOrUnrestrictedTrust || _machineConfigReader.IsNotRetailDeployment;
                 return isDebuggingEnabled;
             }
 

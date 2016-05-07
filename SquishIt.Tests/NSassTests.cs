@@ -1,11 +1,8 @@
 ﻿using System;
 using System.Diagnostics.Contracts;
 using NUnit.Framework;
-using SquishIt.Framework;
 using SquishIt.Framework.Files;
-using SquishIt.Framework.Resolvers;
 using SquishIt.Framework.Utilities;
-using SquishIt.Framework.Web;
 using SquishIt.NSass;
 using SquishIt.Tests.Helpers;
 using SquishIt.Tests.Stubs;
@@ -15,9 +12,8 @@ namespace SquishIt.Tests
     [TestFixture(Category = "IgnoreCI", Description = "Assembly loading issues on build server.")]
     public abstract class NSassTests
     {
-        CssBundleFactory cssBundleFactory;
-        IHasher hasher;
-        string scss = @"$blue: #3bbfce;
+        private readonly Func<CssBundleFactory> _cssBundleFactory;
+        private const string Scss = @"$blue: #3bbfce;
                     $margin: 16px;
 
                     .content-navigation {
@@ -32,49 +28,17 @@ namespace SquishIt.Tests
                       border-color: $blue;
                     }";
 
-        string renderedCss = @".content-navigation{border-color:#3bbfce;color:#2ca2af}.border{padding:8px;margin:8px;border-color:#3bbfce}";
+        private const string RenderedCss = @".content-navigation{border-color:#3bbfce;color:#2ca2af}.border{padding:8px;margin:8px;border-color:#3bbfce}";
+        private readonly IHasher _hasher;
 
-        private readonly IHttpUtility _httpUtility;
-        private readonly string _baseOutputHref;
-        private readonly IPathTranslator _pathTranslator;
-        private readonly FileSystemResolver _fileSystemResolver;
-        private readonly HttpResolver _httpResolver;
-        private readonly RootEmbeddedResourceResolver _rootEmbeddedResourceResolver;
-        private readonly StandardEmbeddedResourceResolver _standardEmbeddedResourceResolver;
-
-        protected NSassTests(IHttpUtility httpUtility, string baseOutputHref, IPathTranslator pathTranslator, FileSystemResolver fileSystemResolver, HttpResolver httpResolver, RootEmbeddedResourceResolver rootEmbeddedResourceResolver, StandardEmbeddedResourceResolver standardEmbeddedResourceResolver)
+        protected NSassTests(Func<CssBundleFactory> cssBundleFactory)
         {
-            Contract.Requires(httpUtility != null);
-            Contract.Requires(baseOutputHref != null);
-            Contract.Requires(pathTranslator != null);
-            Contract.Requires(fileSystemResolver != null);
-            Contract.Requires(httpResolver != null);
-            Contract.Requires(rootEmbeddedResourceResolver != null);
-            Contract.Requires(standardEmbeddedResourceResolver != null);
+            Contract.Requires(cssBundleFactory != null);
 
+            Contract.Ensures(_cssBundleFactory != null);
 
-            Contract.Ensures(_httpUtility != null); Contract.Ensures(_baseOutputHref != null);
-            Contract.Ensures(_pathTranslator != null);
-            Contract.Ensures(_fileSystemResolver != null);
-            Contract.Ensures(_httpResolver != null);
-            Contract.Ensures(_rootEmbeddedResourceResolver != null);
-            Contract.Ensures(_standardEmbeddedResourceResolver != null);
-
-            _httpUtility = httpUtility;
-            _baseOutputHref = baseOutputHref;
-            _pathTranslator = pathTranslator;
-            _fileSystemResolver = fileSystemResolver;
-            _httpResolver = httpResolver;
-            _rootEmbeddedResourceResolver = rootEmbeddedResourceResolver;
-            _standardEmbeddedResourceResolver = standardEmbeddedResourceResolver;
-        }
-
-        [SetUp]
-        public void Setup()
-        {
-            cssBundleFactory = new CssBundleFactory(_httpUtility, _baseOutputHref, _pathTranslator, _fileSystemResolver, _httpResolver, _rootEmbeddedResourceResolver, _standardEmbeddedResourceResolver);
-            var retryableFileOpener = new RetryableFileOpener();
-            hasher = new Hasher(retryableFileOpener);
+            _cssBundleFactory = cssBundleFactory;
+            _hasher = new Hasher(new RetryableFileOpener());
         }
 
         [Test]
@@ -82,23 +46,24 @@ namespace SquishIt.Tests
         {
             using (new StylePreprocessorScope<NSassPreprocessor>())
             {
+                var cssBundleFactory = _cssBundleFactory();
+
                 var cssBundle = cssBundleFactory
-                    .WithHasher(hasher)
+                    .WithHasher(_hasher)
                     .WithDebuggingEnabled(false)
-                    .WithContents(scss)
+                    .WithContents(Scss)
                     .Create();
 
-                string tag = cssBundle
+                var tag = cssBundle
                     .Add("~/css/test.scss")
                     .Render("~/css/output.css");
 
-                string contents =
-                    cssBundleFactory.FileWriterFactory.Files[TestUtilities.PrepareRelativePath(@"css\output.css")];
+                var contents = cssBundleFactory.FileWriterFactory.Files[TestUtilities.PrepareRelativePath(@"css\output.css")];
 
                 Assert.AreEqual(
                     @"<link rel=""stylesheet"" type=""text/css"" href=""css/output.css?r=5C851B7837C923C399A44B1F5BF9F14A"" />",
                     tag);
-                Assert.AreEqual(renderedCss, contents);
+                Assert.AreEqual(RenderedCss, contents);
             }
         }
 
@@ -108,19 +73,21 @@ namespace SquishIt.Tests
         {
             using (new StylePreprocessorScope<NSassPreprocessor>())
             {
+                var cssBundleFactory = _cssBundleFactory();
+
                 var cssBundle = cssBundleFactory
-                    .WithHasher(hasher)
+                    .WithHasher(_hasher)
                     .WithDebuggingEnabled(false)
                     .Create();
 
-                string tag = cssBundle
-                    .AddString(scss, ".scss")
+                var tag = cssBundle
+                    .AddString(Scss, ".scss")
                     .Render("~/css/output.css");
 
-                string contents = cssBundleFactory.FileWriterFactory.Files[TestUtilities.PrepareRelativePath(@"css\output.css")];
+                var contents = cssBundleFactory.FileWriterFactory.Files[TestUtilities.PrepareRelativePath(@"css\output.css")];
 
                 Assert.AreEqual(@"<link rel=""stylesheet"" type=""text/css"" href=""css/output.css?r=5C851B7837C923C399A44B1F5BF9F14A"" />", tag);
-                Assert.AreEqual(renderedCss, contents);
+                Assert.AreEqual(RenderedCss, contents);
             }
         }
 
@@ -129,13 +96,15 @@ namespace SquishIt.Tests
         {
             using (new StylePreprocessorScope<NSassPreprocessor>())
             {
+                var cssBundleFactory = _cssBundleFactory();
+
                 var cssBundle = cssBundleFactory
-                    .WithHasher(hasher)
+                    .WithHasher(_hasher)
                     .WithDebuggingEnabled(true)
                     .Create();
 
                 var tag = cssBundle
-                    .AddString(scss, ".scss")
+                    .AddString(Scss, ".scss")
                     .Render("~/css/output.css");
 
                 var expected = TestUtilities.NormalizeLineEndings(
@@ -160,6 +129,8 @@ namespace SquishIt.Tests
         {
             using (new StylePreprocessorScope<NSassPreprocessor>())
             {
+                var cssBundleFactory = _cssBundleFactory();
+
                 var original =
                     @"table.hl {
                       margin: 2em 0;
@@ -180,7 +151,7 @@ namespace SquishIt.Tests
                     @"table.hl{margin:2em 0}table.hl td.ln{text-align:right}li{font-family:serif;font-weight:bold;font-size:1.2em}";
 
                 var cssBundle = cssBundleFactory
-                    .WithHasher(hasher)
+                    .WithHasher(_hasher)
                     .WithDebuggingEnabled(false)
                     .WithContents(original)
                     .Create();
@@ -189,8 +160,7 @@ namespace SquishIt.Tests
                     .Add("~/css/test.scss")
                     .Render("~/css/output.css");
 
-                string contents =
-                    cssBundleFactory.FileWriterFactory.Files[TestUtilities.PrepareRelativePath(@"css\output.css")];
+                var contents = cssBundleFactory.FileWriterFactory.Files[TestUtilities.PrepareRelativePath(@"css\output.css")];
                 Assert.AreEqual(expected, contents);
             }
         }
@@ -200,6 +170,8 @@ namespace SquishIt.Tests
         {
             using (new StylePreprocessorScope<NSassPreprocessor>())
             {
+                var cssBundleFactory = _cssBundleFactory();
+
                 var original =
                     @"@mixin table-base {
                       th {
@@ -223,7 +195,7 @@ namespace SquishIt.Tests
                     @"#data{float:left;margin-left:10px}#data th{text-align:center;font-weight:bold}#data td,#data th{padding:2px}";
 
                 var cssBundle = cssBundleFactory
-                    .WithHasher(hasher)
+                    .WithHasher(_hasher)
                     .WithDebuggingEnabled(false)
                     .WithContents(original)
                     .Create();
@@ -232,7 +204,7 @@ namespace SquishIt.Tests
                     .Add("~/css/test.scss")
                     .Render("~/css/output.css");
 
-                string contents =
+                var contents =
                     cssBundleFactory.FileWriterFactory.Files[TestUtilities.PrepareRelativePath(@"css\output.css")];
                 Assert.AreEqual(expected, contents);
             }
@@ -243,6 +215,8 @@ namespace SquishIt.Tests
         {
             using (new StylePreprocessorScope<NSassPreprocessor>())
             {
+                var cssBundleFactory = _cssBundleFactory();
+
                 var original =
                     @".error {
                       margin-right: 1px;
@@ -258,7 +232,7 @@ namespace SquishIt.Tests
                 var expected = @".error,.badError{margin-right:1px}.error.intrusion{margin-left:1px}.badError{margin-top:1px}";
 
                 var cssBundle = cssBundleFactory
-                    .WithHasher(hasher)
+                    .WithHasher(_hasher)
                     .WithDebuggingEnabled(false)
                     .WithContents(original)
                     .Create();

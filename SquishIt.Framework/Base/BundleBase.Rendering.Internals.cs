@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Web;
-using SquishIt.Framework.Files;
 using SquishIt.Framework.Renderers;
 using SquishIt.Framework.Utilities;
 
@@ -84,7 +82,7 @@ namespace SquishIt.Framework.Base
         {
             if (file.StartsWith("~/"))
             {
-                string appRelativePath = HttpRuntime.AppDomainAppVirtualPath;
+                string appRelativePath = VirtualPathRoot;
                 if (appRelativePath != null && !appRelativePath.EndsWith("/"))
                     appRelativePath += "/";
                 return file.Replace("~/", appRelativePath);
@@ -249,7 +247,7 @@ namespace SquishIt.Framework.Base
             string content;
             if (!TryGetCachedBundle(key, out content))
             {
-                using (new CriticalRenderingSection(renderTo))
+                using (new CriticalRenderingSection(_trustLevel, _filePathMutexProvider, renderTo))
                 {
                     if (!TryGetCachedBundle(key, out content))
                     {

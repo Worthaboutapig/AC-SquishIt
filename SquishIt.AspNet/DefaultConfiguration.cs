@@ -1,8 +1,12 @@
-﻿using SquishIt.Framework;
+﻿using System.Web;
+using SquishIt.Framework;
+using SquishIt.Framework.Caches;
+using SquishIt.Framework.Caching;
 using SquishIt.Framework.Utilities;
 using SquishIt.Framework.Web;
-using SquishIt.AspNet.Web;
 using SquishIt.Framework.Resolvers;
+using HttpContext = SquishIt.AspNet.Web.HttpContext;
+using HttpUtility = SquishIt.AspNet.Web.HttpUtility;
 
 namespace SquishIt.AspNet
 {
@@ -26,7 +30,10 @@ namespace SquishIt.AspNet
             IFolderResolver fileSystemResolver = null,
             IFileResolver httpResolver = null,
             IFileResolver rootEmbeddedResourceResolver = null,
-            IFileResolver standardEmbeddedResourceResolver = null
+            IFileResolver standardEmbeddedResourceResolver = null,
+            ICache cache = null,
+            IContentCache bundleCache = null,
+            IContentCache rawContentCache = null
             )
         {
             UseHttpUtility(httpUtility ?? new HttpUtility());
@@ -37,10 +44,10 @@ namespace SquishIt.AspNet
             virtualPathUtility = virtualPathUtility ?? new VirtualPathUtilityWrapper();
             UseVirtualPathUtility(virtualPathUtility);
 
-            virtualPathRoot = virtualPathRoot ?? System.Web.HttpRuntime.AppDomainAppVirtualPath;
-            physicalPathRoot = physicalPathRoot ?? System.Web.HttpRuntime.AppDomainAppPath;
+            VirtualPathRoot = virtualPathRoot ?? HttpRuntime.AppDomainAppVirtualPath;
+            PhysicalPathRoot = physicalPathRoot ?? HttpRuntime.AppDomainAppPath;
 
-            pathTranslator = pathTranslator ?? new DefaultPathTranslator(virtualPathRoot, physicalPathRoot, httpContext, virtualPathUtility);
+            pathTranslator = pathTranslator ?? new DefaultPathTranslator(VirtualPathRoot, PhysicalPathRoot, httpContext, virtualPathUtility);
             UsePathTranslator(pathTranslator);
 
             var machineConfigReader = new MachineConfigReader();
@@ -51,6 +58,10 @@ namespace SquishIt.AspNet
             HttpResolver = httpResolver ?? new HttpResolver(DefaultTempPathProvider());
             RootEmbeddedResourceResolver = rootEmbeddedResourceResolver ?? new RootEmbeddedResourceResolver(DefaultTempPathProvider());
             StandardEmbeddedResourceResolver = standardEmbeddedResourceResolver ?? new StandardEmbeddedResourceResolver(DefaultTempPathProvider());
+
+            cache = cache ?? new MemoryCache();
+            BundleCache = bundleCache ?? new BundleCache(cache);
+            RawContentCache = rawContentCache ?? new RawContentCache(cache);
         }
     }
 }

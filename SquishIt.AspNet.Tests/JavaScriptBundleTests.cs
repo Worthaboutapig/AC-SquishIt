@@ -1,5 +1,4 @@
 ﻿using NUnit.Framework;
-using SquishIt.Framework;
 
 namespace SquishIt.AspNet.Tests
 {
@@ -12,9 +11,9 @@ namespace SquishIt.AspNet.Tests
             TestConfiguration.Default.FileSystemResolver,
             TestConfiguration.Default.HttpResolver,
             TestConfiguration.Default.RootEmbeddedResourceResolver,
-            TestConfiguration.Default.StandardEmbeddedResourceResolver)
+            TestConfiguration.Default.StandardEmbeddedResourceResolver,
+            TestConfiguration.Default.VirtualPathRoot)
         {
-            Configuration.Instance = TestConfiguration.Default;
         }
     }
 }

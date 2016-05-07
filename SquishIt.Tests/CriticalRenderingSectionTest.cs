@@ -4,7 +4,6 @@ using System.Web;
 using Moq;
 using NUnit.Framework;
 using SquishIt.Framework.Utilities;
-using SquishIt.Tests.Helpers;
 
 namespace SquishIt.Tests
 {
@@ -12,23 +11,19 @@ namespace SquishIt.Tests
     public class CriticalRenderingSectionTest
     {
         [TestCase(AspNetHostingPermissionLevel.Unrestricted)]
-        public void UseMutex(AspNetHostingPermissionLevel level)
+        public void UseMutex(AspNetHostingPermissionLevel permissionLevel)
         {
-            string testDir = Guid.NewGuid().ToString();
+            var testDir = Guid.NewGuid().ToString();
 
             var trustLevel = new Mock<ITrustLevel>();
-            trustLevel.SetupGet(tl => tl.CurrentTrustLevel).Returns(level);
+            trustLevel.SetupGet(tl => tl.IsFullTrust).Returns(() => permissionLevel == AspNetHostingPermissionLevel.Unrestricted);
 
             var filePathMutextProvider = new Mock<IFilePathMutexProvider>();
             filePathMutextProvider.Setup(mp => mp.GetMutexForPath(testDir)).Returns(new Mutex());
 
-            using(new TrustLevelScope(trustLevel.Object))
-            using(new FilePathMutexProviderScope(filePathMutextProvider.Object))
+            using(new CriticalRenderingSection(trustLevel.Object, filePathMutextProvider.Object, testDir))
             {
-                using(new CriticalRenderingSection(testDir))
-                {
-                    //do something
-                }
+                //do something
             }
 
             trustLevel.VerifyAll();
@@ -40,23 +35,18 @@ namespace SquishIt.Tests
         [TestCase(AspNetHostingPermissionLevel.Low)]
         [TestCase(AspNetHostingPermissionLevel.Minimal)]
         [TestCase(AspNetHostingPermissionLevel.None)]
-        public void DontUseMutex(AspNetHostingPermissionLevel level)
+        public void DontUseMutex(AspNetHostingPermissionLevel permissionLevel)
         {
-            string testDir = Guid.NewGuid().ToString();
+            var testDir = Guid.NewGuid().ToString();
 
             var trustLevel = new Mock<ITrustLevel>();
-            trustLevel.SetupGet(tl => tl.CurrentTrustLevel).Returns(level);
-
+            trustLevel.SetupGet(tl => tl.IsFullTrust).Returns(() => permissionLevel == AspNetHostingPermissionLevel.Unrestricted);
             //just want to be sure nothing is called on this
             var filePathMutextProvider = new Mock<IFilePathMutexProvider>(MockBehavior.Strict);
 
-            using(new TrustLevelScope(trustLevel.Object))
-            using(new FilePathMutexProviderScope(filePathMutextProvider.Object))
+            using(new CriticalRenderingSection(trustLevel.Object,filePathMutextProvider.Object, testDir))
             {
-                using(new CriticalRenderingSection(testDir))
-                {
-                    //do something
-                }
+                //do something
             }
 
             trustLevel.VerifyAll();

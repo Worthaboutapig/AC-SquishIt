@@ -1,19 +1,20 @@
 ﻿using NUnit.Framework;
 
-namespace SquishIt.AspNet.Tests
+namespace SquishIt.Nancy.Tests
 {
     [TestFixture]
-    public class ScriptPreprocessorPipelineTests : SquishIt.Tests.ScriptPreprocessorPipelineTests
+    public class CoffeeScriptTests : SquishIt.Tests.CoffeeScriptTests
     {
-        public ScriptPreprocessorPipelineTests() : base(
+        public CoffeeScriptTests() : base(
             TestConfiguration.Default.DefaultOutputBaseHref(),
             TestConfiguration.Default.DefaultPathTranslator(),
             TestConfiguration.Default.FileSystemResolver,
             TestConfiguration.Default.HttpResolver,
             TestConfiguration.Default.RootEmbeddedResourceResolver,
             TestConfiguration.Default.StandardEmbeddedResourceResolver,
-            TestConfiguration.Default.VirtualPathRoot)
+            TestConfiguration.Default.VirtualPathRoot, TODO, TODO)
         {
         }
     }
+
 }

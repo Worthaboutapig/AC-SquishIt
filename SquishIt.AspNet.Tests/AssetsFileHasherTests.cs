@@ -1,5 +1,4 @@
 ﻿using NUnit.Framework;
-using SquishIt.Framework;
 
 namespace SquishIt.AspNet.Tests
 {
@@ -8,7 +7,6 @@ namespace SquishIt.AspNet.Tests
     {
         public AssetsFileHasherTests() : base(TestConfiguration.Default.DefaultHttpUtility(), TestConfiguration.Default.DefaultPathTranslator())
         {
-            Configuration.Instance = TestConfiguration.Default;
         }
     }
 }

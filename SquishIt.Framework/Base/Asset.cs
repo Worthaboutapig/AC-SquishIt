@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
-using SquishIt.Framework.Files;
 using SquishIt.Framework.Resolvers;
 
 namespace SquishIt.Framework.Base
@@ -53,13 +52,10 @@ namespace SquishIt.Framework.Base
             private readonly IFileResolver _rootEmbeddedResourceResolver;
             private readonly IFileResolver _standardEmbeddedResourceResolver;
 
-            public FilenamesResolver(IPathTranslator pathTranslator, IFolderResolver fileSystemResolver, IFileResolver httpResolver, IFileResolver rootEmbeddedResourceResolver, IFileResolver standardEmbeddedResourceResolver)
+            public FilenamesResolver(IPathTranslator pathTranslator, IResourceResolver resourceResolver)
             {
                 Contract.Requires(pathTranslator != null);
-                Contract.Requires(fileSystemResolver != null);
-                Contract.Requires(httpResolver != null);
-                Contract.Requires(rootEmbeddedResourceResolver != null);
-                Contract.Requires(standardEmbeddedResourceResolver != null);
+                Contract.Requires(resourceResolver != null);
 
                 Contract.Ensures(_pathTranslator != null);
                 Contract.Ensures(_fileSystemResolver != null);
@@ -68,10 +64,10 @@ namespace SquishIt.Framework.Base
                 Contract.Ensures(_standardEmbeddedResourceResolver != null);
 
                 _pathTranslator = pathTranslator;
-                _fileSystemResolver = fileSystemResolver;
-                _httpResolver = httpResolver;
-                _rootEmbeddedResourceResolver = rootEmbeddedResourceResolver;
-                _standardEmbeddedResourceResolver = standardEmbeddedResourceResolver;
+                _fileSystemResolver = resourceResolver.FileSystemResolver;
+                _httpResolver = resourceResolver.HttpResolver;
+                _rootEmbeddedResourceResolver = resourceResolver.RootEmbeddedResourceResolver;
+                _standardEmbeddedResourceResolver = resourceResolver.StandardEmbeddedResourceResolver;
             }
 
             internal IEnumerable<string> ResolveFilenames(Asset asset, string debugFileExtension, IEnumerable<string> allowedExtensions, IEnumerable<string> disallowedExtensions, Func<bool> isDebuggingEnabled)

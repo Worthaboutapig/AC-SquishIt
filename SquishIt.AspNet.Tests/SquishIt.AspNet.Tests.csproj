@@ -40,6 +40,7 @@
     <Compile Include="JavaScriptBundleTests.cs" />
     <Compile Include="MultipleWorkerProcessesTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SassTests.cs" />
     <Compile Include="ScriptPreprocessorPipelineTests.cs" />
     <Compile Include="TestConfiguration.cs" />
   </ItemGroup>

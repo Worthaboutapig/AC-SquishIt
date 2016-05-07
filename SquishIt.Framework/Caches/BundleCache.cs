@@ -1,3 +1,5 @@
+using SquishIt.Framework.Caching;
+
 namespace SquishIt.Framework.Caches
 {
     public class BundleCache: ContentCache
@@ -5,6 +7,10 @@ namespace SquishIt.Framework.Caches
         protected override string KeyPrefix
         {
             get { return "squishit_"; }
+        }
+
+        public BundleCache(ICache cache) : base(cache)
+        {
         }
     }
 }

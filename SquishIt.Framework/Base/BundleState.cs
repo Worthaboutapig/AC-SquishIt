@@ -10,7 +10,7 @@ namespace SquishIt.Framework.Base
     {
         internal List<Asset> Assets = new List<Asset>();
         internal Dictionary<string, string> Attributes = new Dictionary<string, string>();
-        
+
         internal HashSet<string> AllowedExtensions = new HashSet<string>();
         internal IList<IPreprocessor> Preprocessors = new List<IPreprocessor>();
         internal List<string> DependentFiles = new List<string>();
@@ -30,7 +30,7 @@ namespace SquishIt.Framework.Base
         internal Func<bool> DebugPredicate { get; set; }
 
         internal BundleState()
-        { 
+        {
         }
 
         internal BundleState(Dictionary<string, string> attributes)
@@ -40,9 +40,9 @@ namespace SquishIt.Framework.Base
 
         internal void AddPreprocessor(IPreprocessor instance)
         {
-            if(Preprocessors.All(ipp => ipp.GetType() != instance.GetType()))
+            if (Preprocessors.All(ipp => ipp.GetType() != instance.GetType()))
             {
-                foreach(var extension in instance.Extensions)
+                foreach (var extension in instance.Extensions)
                 {
                     AllowedExtensions.Add(extension);
                 }
