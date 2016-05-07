@@ -99,6 +99,7 @@
     <Compile Include="Caches\ContentCache.cs" />
     <Compile Include="CSS\RelativePathAdapter.cs" />
     <Compile Include="Files\CompositeInputResolver.cs" />
+    <Compile Include="IBundleCreator.cs" />
     <Compile Include="Invalidation\DefaultCacheInvalidationStrategy.cs" />
     <Compile Include="Invalidation\HashAsVirtualDirectoryCacheInvalidationStrategy.cs" />
     <Compile Include="Invalidation\ICacheInvalidationStrategy.cs" />

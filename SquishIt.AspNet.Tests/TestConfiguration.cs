@@ -11,18 +11,18 @@ namespace SquishIt.AspNet.Tests
         private static readonly IHttpContext HttpContext = new HttpContextStub(httpRequest: HttpRequest);
         private static readonly IFileResolver HttpResolver = new HttpResolverStub();
 
-        private static readonly DefaultConfiguration DefaultConfiguration = new DefaultConfiguration("/testVirtualPathRoot", "B:\\", httpContext: HttpContext, httpResolver: HttpResolver);
+        private static readonly DefaultBundleCreator DefaultBundleCreator = new DefaultBundleCreator("/testVirtualPathRoot", "B:\\", httpContext: HttpContext, httpResolver: HttpResolver);
 
         static TestConfiguration()
         {
             Configuration.Instance = Default;
         }
 
-        public static DefaultConfiguration Default
+        public static DefaultBundleCreator Default
         {
             get
             {
-                return DefaultConfiguration;
+                return DefaultBundleCreator;
             }
         }
     }

@@ -5,53 +5,41 @@ using System.Linq;
 using SquishIt.Framework;
 using SquishIt.Framework.Base;
 using SquishIt.Framework.CSS;
+using SquishIt.Framework.Files;
 using SquishIt.Framework.JavaScript;
 using SquishIt.Framework.Utilities;
 using HttpContext = System.Web.HttpContext;
 
 namespace SquishIt.Mvc
 {
-	using Framework.Files;
-
-	/// <summary>
+    /// <summary>
     /// Manages a bundle of .js and/or .css specific to the specified ViewPage
     /// </summary>
     public class AutoBundler
     {
+        static AutoBundler()
+        {
+            Behavior = new AutoBundlingBehavior
+                       {
+                           FilenameFormat = "{0}{1}{2}",
+                           ResourceLocation = "~/assets/",
+                           RenderingDelegate = (b, n) => b.Render(n),
+                           // Since some resource types contain paths relative to the current location,
+                           // we offer the option of splitting bundles on path boundaries.
+                           KeepScriptsInOriginalFolder = false,
+                           // Grouping bundle content by folder can result in content order changes
+                           // For example, [  "/a/css1", "/b/css2",   "/a/css3"  ]
+                           // may become   [ ["/a/css1", "/a/css3"], ["/b/css2"] ]
+                           // for that reason these should be off be default
+                           // Note that SquishIt does support relocating CSS url() paths.
+                           KeepStylesInOriginalFolder = true
+                       };
+        }
+
+        private static IBundleCreator _bundleCreator;
         public static AutoBundlingBehavior Behavior { get; set; }
 
-        private readonly IHasher _hasher = new Hasher(new RetryableFileOpener());
-		private static readonly IDebugStatusReader _debugStatusReader;
-		private static readonly Func<CSSBundle> _cssBundle;
-		private static readonly Func<JavaScriptBundle> _javascriptBundle;
-
-		static AutoBundler()
-		{
-			var machineConfigReader = new MachineConfigReader();
-			var httpContext = new AspNet.Web.HttpContext(HttpContext.Current);
-			var debugStatusReader = new DebugStatusReader(machineConfigReader, httpContext);
-
-			Behavior = new AutoBundlingBehavior
-			           {
-				           FilenameFormat = "{0}{1}{2}",
-				           ResourceLocation = "~/assets/",
-				           RenderingDelegate = (b, n) => b.Render(n),
-				           // Since some resource types contain paths relative to the current location,
-				           // we offer the option of splitting bundles on path boundaries.
-				           KeepScriptsInOriginalFolder = false,
-				           // Grouping bundle content by folder can result in content order changes
-				           // For example, [  "/a/css1", "/b/css2",   "/a/css3"  ]
-				           // may become   [ ["/a/css1", "/a/css3"], ["/b/css2"] ]
-				           // for that reason these should be off be default
-				           // Note that SquishIt does support relocating CSS url() paths.
-				           KeepStylesInOriginalFolder = true,
-			           };
-
-			_cssBundle = () => new CSSBundle(debugStatusReader);
-			_javascriptBundle = () => new JavaScriptBundle(debugStatusReader);
-		}
-
-		// It might be nice to allow multiple link queues to be named,
+        // It might be nice to allow multiple link queues to be named,
         // for example one for the head and another for the tail of body
         /// <summary>
         /// Get the cached AutoBundler for this HTTP context,
@@ -88,6 +76,7 @@ namespace SquishIt.Mvc
         /// <summary>
         /// Queues resources to be bundled and later emitted with the ResourceLinks directive
         /// </summary>
+        /// <param name="viewPath"></param>
         /// <param name="resourceFiles">Project paths to JavaScript and/or CSS files</param>
         public void AddResources(string viewPath, params string[] resourceFiles)
         {
@@ -104,16 +93,17 @@ namespace SquishIt.Mvc
         /// <param name="resourceFiles">Zero or more project paths to JavaScript files</param>
         public void AddStyleResources(string viewPath, params string[] resourceFiles)
         {
-            AddBundles(() => _cssBundle(), viewPath, Behavior.KeepStylesInOriginalFolder, STYLE_BUNDLE_EXTENSION, resourceFiles);
+            AddBundles(() => _bundleCreator.GetCssBundle(), viewPath, Behavior.KeepStylesInOriginalFolder, STYLE_BUNDLE_EXTENSION, resourceFiles);
         }
 
         /// <summary>
         /// Bundles JavaScript files to be emitted with the ResourceLinks directive
         /// </summary>
+        /// <param name="viewPath"></param>
         /// <param name="resourceFiles">Zero or more project paths to JavaScript files</param>
         public void AddScriptResources(string viewPath, params string[] resourceFiles)
         {
-            AddBundles(() => _javascriptBundle(), viewPath, Behavior.KeepScriptsInOriginalFolder, SCRIPT_BUNDLE_EXTENSION, resourceFiles);
+            AddBundles(() => _bundleCreator.GetJavaScriptBundle(), viewPath, Behavior.KeepScriptsInOriginalFolder, SCRIPT_BUNDLE_EXTENSION, resourceFiles);
         }
 
         private void AddBundles<bT>(Func<BundleBase<bT>> newBundleFunc, string viewPath, bool originalFolder, string bundleExtension, string[] resourceFiles) where bT : BundleBase<bT>
@@ -179,6 +169,10 @@ namespace SquishIt.Mvc
         private const string SCRIPT_BUNDLE_EXTENSION = ".js";
         private const string STYLE_BUNDLE_EXTENSION = ".css";
 
+        private readonly List<string> styleResourceLinks = new List<string>();
+        private readonly List<string> scriptResourceLinks = new List<string>();
+        private readonly IHasher _hasher = new Hasher(new RetryableFileOpener());
+
         /// <summary>
         /// Retrieves the cached AutoBundler from the provided dictionary, creating and caching it if necessary.
         /// </summary>
@@ -203,9 +197,6 @@ namespace SquishIt.Mvc
         {
             return _hasher.GetHash(string.Join("-", resourcePaths));
         }
-
-        private readonly List<string> styleResourceLinks = new List<string>();
-        private readonly List<string> scriptResourceLinks = new List<string>();
 
         private string[] FilterFileExtensions(string[] filenames, IEnumerable<string> extensions)
         {

@@ -1,30 +1,28 @@
 ﻿using System.Web;
 using System.Web.Mvc;
 using System.Web.WebPages;
+using SquishIt.AspNet;
+using SquishIt.Framework;
 using SquishIt.Framework.CSS;
 using SquishIt.Framework.JavaScript;
 using SquishIt.Framework.Utilities;
-using SquishIt.Framework.Files;
 
 namespace SquishIt.Mvc
 {
     public static class HtmlHelperExtensions
     {
-        private static readonly IMachineConfigReader _machineConfigReader = new MachineConfigReader();
+        private static readonly IBundleCreator BundleCreator = new DefaultBundleCreator();
 
         public static CSSBundle BundleCss(this HtmlHelper html, IDebugStatusReader debugStatusReader = null)
         {
-            debugStatusReader = debugStatusReader ?? new DebugStatusReader(_machineConfigReader, new AspNet.Web.HttpContext(HttpContext.Current));
-	        var retryableFileOpener = new RetryableFileOpener();
-	        var bundleCss = new CSSBundle(debugStatusReader, new FileWriterFactory(retryableFileOpener, 5), new FileReaderFactory(retryableFileOpener, 5), new DirectoryWrapper(), Configuration.Instance.DefaultHasher(), Configuration.Instance.BundleCache, Configuration.Instance.RawContentCache, Configuration.Instance.DefaultHttpUtility(), Configuration.Instance.DefaultOutputBaseHref(), Configuration.Instance.DefaultPathTranslator(), Configuration.Instance.FileSystemResolver, Configuration.Instance.HttpResolver, Configuration.Instance.RootEmbeddedResourceResolver, Configuration.Instance.StandardEmbeddedResourceResolver, Configuration.Instance.VirtualPathRoot);
-
-            return bundleCss;
+            var cssBundle = BundleCreator.GetCssBundle();
+            return cssBundle;
         }
 
         public static JavaScriptBundle BundleJavaScript(this HtmlHelper html, IDebugStatusReader debugStatusReader = null)
         {
-            debugStatusReader = debugStatusReader ?? new DebugStatusReader(_machineConfigReader, new AspNet.Web.HttpContext(HttpContext.Current));
-            return new JavaScriptBundle(debugStatusReader);
+            var javaScriptBundle = BundleCreator.GetJavaScriptBundle();
+            return javaScriptBundle;
         }
 
         public static string ViewName(this HtmlHelper html)

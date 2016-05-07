@@ -38,7 +38,7 @@
     <Reference Include="System.Web.Abstractions" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="DefaultConfiguration.cs" />
+    <Compile Include="DefaultBundleCreator.cs" />
     <Compile Include="DefaultPathTranslator.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="VirtualPathUtilityWrapper.cs" />
