@@ -108,6 +108,7 @@
     <Compile Include="ITempPathProvider.cs" />
     <Compile Include="Resolvers\IFolderResolver.cs" />
     <Compile Include="Resolvers\IResourceResolver.cs" />
+    <Compile Include="Resolvers\DefaultResourceResolver.cs" />
     <Compile Include="Resolvers\RootEmbeddedResourceResolver.cs" />
     <Compile Include="Resolvers\StandardEmbeddedResourceResolver.cs" />
     <Compile Include="TempPathProvider.cs" />

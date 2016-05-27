@@ -5,7 +5,7 @@ namespace SquishIt.AspNet.Tests
     [TestFixture]
     public class CSSPathRewriterTests : SquishIt.Tests.CSSPathRewriterTests
     {
-        public CSSPathRewriterTests() : base(TestConfiguration.Default.DefaultHttpUtility(), TestConfiguration.Default.DefaultPathTranslator())
+        public CSSPathRewriterTests() : base(TestBundleCreator.Default.HttpUtility, TestBundleCreator.Default.PathTranslator)
         {
         }
     }

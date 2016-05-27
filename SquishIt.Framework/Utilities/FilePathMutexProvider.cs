@@ -19,6 +19,9 @@ namespace SquishIt.Framework.Utilities
 
         public FilePathMutexProvider(IHasher hasher, IPathTranslator pathTranslator)
         {
+            if (hasher == null) throw new ArgumentNullException();
+            if (pathTranslator == null) throw new ArgumentNullException();
+
             _pathMutexes = new Dictionary<string, Mutex>(StringComparer.Ordinal);
             _hasher = hasher;
             _pathTranslator = pathTranslator;

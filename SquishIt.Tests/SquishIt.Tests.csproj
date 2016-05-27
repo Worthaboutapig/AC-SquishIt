@@ -72,6 +72,8 @@
     <Compile Include="CoffeescriptCompilerTests.cs" />
     <Compile Include="CoffeeScriptTests.cs" />
     <Compile Include="ConfigurationTests.cs" />
+    <Compile Include="Helpers\ITestBundleCreator.cs" />
+    <Compile Include="Helpers\TestBundleCreator.cs" />
     <Compile Include="SHA1HasherTests.cs" />
     <Compile Include="HttpResolverTest.cs" />
     <Compile Include="HashAsVirtualDirectoryCacheInvalidationStrategyTests.cs" />
@@ -93,6 +95,7 @@
     <Compile Include="MultipleWorkerProcessesTests.cs" />
     <Compile Include="RetryableFileOpenerTest.cs" />
     <Compile Include="LessTests.cs" />
+    <Compile Include="Stubs\ServerStub.cs" />
     <Compile Include="StylePreprocessorPipelineTests.cs" />
     <Compile Include="SassTests.cs" />
     <Compile Include="Stubs\PreprocessorScope.cs" />
@@ -108,12 +111,12 @@
     <Compile Include="Stubs\StubHasher.cs" />
     <Compile Include="Helpers\TestUtilities.cs" />
     <Compile Include="Stubs\StubPreprocessors.cs" />
-    <Compile Include="Stubs\StubResolver.cs" />
+    <Compile Include="Stubs\StubFileResolver.cs" />
     <Compile Include="VersionTests.cs" />
     <Compile Include="WebTests.cs" />
-    <Compile Include="Web\HttpContextStub.cs" />
-    <Compile Include="Web\HttpRequestStub.cs" />
-    <Compile Include="Web\HttpResolverStub.cs" />
+    <Compile Include="Stubs\StubHttpContext.cs" />
+    <Compile Include="Stubs\StubHttpRequest.cs" />
+    <Compile Include="Stubs\StubHttpResolver.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\SquishIt.CoffeeScript\SquishIt.CoffeeScript.csproj">

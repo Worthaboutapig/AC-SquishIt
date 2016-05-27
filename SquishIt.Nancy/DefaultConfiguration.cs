@@ -31,7 +31,7 @@ namespace SquishIt.Nancy
             IFileResolver httpResolver = null,
             IFileResolver rootEmbeddedResourceResolver = null,
             IFileResolver standardEmbeddedResourceResolver = null,
-            IContentCache bundleCache = null,
+            IContentCache bundleContentCache = null,
             IContentCache rawContentCache = null
             )
         {
@@ -58,7 +58,7 @@ namespace SquishIt.Nancy
             RootEmbeddedResourceResolver = rootEmbeddedResourceResolver ?? new RootEmbeddedResourceResolver(DefaultTempPathProvider());
             StandardEmbeddedResourceResolver = standardEmbeddedResourceResolver ?? new StandardEmbeddedResourceResolver(DefaultTempPathProvider());
 
-            BundleCache = bundleCache ?? new BundleCache(cache);
+            bundleContentCache = bundleContentCache ?? new BundleContentCache(cache);
             RawContentCache = rawContentCache ?? new RawContentCache(cache);
         }
     }

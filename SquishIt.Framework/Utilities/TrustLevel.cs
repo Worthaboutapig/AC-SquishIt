@@ -2,7 +2,7 @@
 
 namespace SquishIt.Framework.Utilities
 {
-    internal class TrustLevel : ITrustLevel
+    public class TrustLevel : ITrustLevel
     {
         public AspNetHostingPermissionLevel CurrentTrustLevel
         {

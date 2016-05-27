@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using SquishIt.Framework.Files;
 
@@ -14,17 +15,20 @@ namespace SquishIt.Tests.Stubs
 
         public IFileWriter GetFileWriter(string file)
         {
-            return new StubFileWriter(file, (f, contents) =>
-                                                {
-                                                    if (files.ContainsKey(f))
-                                                    {
-                                                        files[f] = files[f] + contents;
-                                                    }
-                                                    else
-                                                    {
-                                                        files[f] = contents;
-                                                    }
-                                                });
+            Action<string, string> writeDelegate = (f, contents) =>
+                                   {
+                                       if (files.ContainsKey(f))
+                                       {
+                                           files[f] = files[f] + contents;
+                                       }
+                                       else
+                                       {
+                                           files[f] = contents;
+                                       }
+                                   };
+            var stubFileWriter = new StubFileWriter(file, writeDelegate);
+
+            return stubFileWriter;
         }
     }
 }

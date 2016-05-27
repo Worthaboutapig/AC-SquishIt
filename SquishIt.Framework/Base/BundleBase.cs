@@ -34,7 +34,7 @@ namespace SquishIt.Framework.Base
         protected abstract string ProcessFile(string file, string outputFile, Asset originalAsset);
 
         internal BundleState bundleState;
-        readonly IContentCache bundleCache;
+        readonly IContentCache bundleContentCache;
         readonly IContentCache rawContentCache;
         protected IFileWriterFactory fileWriterFactory;
         protected IFileReaderFactory fileReaderFactory;
@@ -56,7 +56,7 @@ namespace SquishIt.Framework.Base
 
         protected BundleBase(IFileWriterFactory fileWriterFactory, IFileReaderFactory fileReaderFactory,
                              IDebugStatusReader debugStatusReader, IDirectoryWrapper directoryWrapper, IHasher hasher,
-                             IContentCache bundleCache, IContentCache rawContentCache, string baseOutputHref,
+                             IContentCache bundleContentCache, IContentCache rawContentCache, string baseOutputHref,
                              IPathTranslator pathTranslator,
                              IResourceResolver resourceResolver,
                              IRenderer releaseRenderer,
@@ -81,7 +81,7 @@ namespace SquishIt.Framework.Base
                               CacheInvalidationStrategy = cacheInvalidationStrategy
                           };
 
-            this.bundleCache = bundleCache;
+            this.bundleContentCache = bundleContentCache;
             this.rawContentCache = rawContentCache;
             BaseOutputHref = baseOutputHref;
             PathTranslator = pathTranslator;
@@ -107,7 +107,7 @@ namespace SquishIt.Framework.Base
             }
             else
             {
-                fileRenderer = bundleState.ReleaseFileRenderer ?? this.releaseRenderer ?? new FileRenderer(fileWriterFactory);
+                fileRenderer = bundleState.ReleaseFileRenderer ?? releaseRenderer ?? new FileRenderer(fileWriterFactory);
             }
 
             return fileRenderer;
@@ -497,17 +497,19 @@ namespace SquishIt.Framework.Base
 
         protected abstract void AggregateContent(List<Asset> assets, StringBuilder sb, string outputFile);
 
-        BundleState GetCachedBundleState(string name)
+        private BundleState GetCachedBundleState(string name)
         {
             var bundle = bundleStateCache[CachePrefix + name];
             if (bundle.ForceDebug)
             {
                 _debugStatusReader.ForceDebug();
             }
+
             if (bundle.ForceRelease)
             {
                 _debugStatusReader.ForceRelease();
             }
+
             return bundle;
         }
 
@@ -518,8 +520,11 @@ namespace SquishIt.Framework.Base
         /// <returns>HTML tag.</returns>
         public string Render(string renderTo)
         {
-            string key = renderTo;
-            return Render(renderTo, key, GetFileRenderer());
+            var key = renderTo;
+            var fileRenderer = GetFileRenderer();
+            var content = Render(renderTo, key, fileRenderer);
+
+            return content;
         }
 
         /// <summary>
@@ -530,7 +535,10 @@ namespace SquishIt.Framework.Base
         public string RenderCachedAssetTag(string name)
         {
             bundleState = GetCachedBundleState(name);
-            return Render(null, name, new CacheRenderer(CachePrefix, name));
+            var cacheRenderer = new CacheRenderer(CachePrefix, name);
+            var content = Render(null, name, cacheRenderer);
+
+            return content;
         }
 
         /// <summary>
@@ -540,7 +548,8 @@ namespace SquishIt.Framework.Base
         /// <param name="renderToFilePath">File system path that cached bundle would be rendered to (for import processing).</param>
         public void AsNamed(string name, string renderToFilePath)
         {
-            Render(renderToFilePath, name, GetFileRenderer());
+            var fileRenderer = GetFileRenderer();
+            Render(renderToFilePath, name, fileRenderer);
             bundleState.Path = renderToFilePath;
             bundleStateCache[CachePrefix + name] = bundleState;
         }
@@ -573,11 +582,11 @@ namespace SquishIt.Framework.Base
                 // Revisit https://github.com/jetheredge/SquishIt/pull/155 and https://github.com/jetheredge/SquishIt/issues/183
                 //hopefully we can find a better way to satisfy both of these requirements
                 var fullName = (BaseOutputHref ?? "") + CachePrefix + name;
-                var content = bundleCache.GetContent(fullName);
+                var content = bundleContentCache.GetContent(fullName);
                 if (content == null)
                 {
                     AsNamed(name, bundleState.Path);
-                    return bundleCache.GetContent(CachePrefix + name);
+                    return bundleContentCache.GetContent(CachePrefix + name);
                 }
                 return content;
             }
@@ -603,7 +612,7 @@ namespace SquishIt.Framework.Base
 
         public void ClearCache()
         {
-            bundleCache.ClearTestingCache();
+            bundleContentCache.ClearTestingCache();
         }
 
         /// <summary>

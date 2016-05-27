@@ -1,32 +1,35 @@
+using System;
 using System.IO;
-using SquishIt.Framework.Utilities;
 
 namespace SquishIt.Framework.Files
 {
-    public class FileWriter: IFileWriter
+    public class FileWriter : IFileWriter
     {
-        readonly StreamWriter streamWriter;
+        private readonly StreamWriter _streamWriter;
 
-        public FileWriter(IRetryableFileOpener retryableFileOpener, int numberOfRetries, string file)
+        public FileWriter(IRetryableFileOpener retryableFileOpener, string file, int numberOfRetries = 5)
         {
-            streamWriter = retryableFileOpener.OpenTextStreamWriter(file, numberOfRetries, false);
+            if (retryableFileOpener == null) throw new ArgumentNullException("retryableFileOpener");
+            if (string.IsNullOrWhiteSpace(file)) throw new ArgumentException("Invalid file name", "file");
+
+            _streamWriter = retryableFileOpener.OpenTextStreamWriter(file, numberOfRetries, false);
         }
 
         public void Write(string value)
         {
-            streamWriter.Write(value);
+            _streamWriter.Write(value);
         }
 
         public void WriteLine(string value)
         {
-            streamWriter.WriteLine(value);
+            _streamWriter.WriteLine(value);
         }
 
         public void Dispose()
         {
-            if (streamWriter != null)
+            if (_streamWriter != null)
             {
-                streamWriter.Dispose();    
+                _streamWriter.Dispose();
             }
         }
     }

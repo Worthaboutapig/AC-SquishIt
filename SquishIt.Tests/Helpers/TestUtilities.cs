@@ -15,8 +15,7 @@ namespace SquishIt.Tests.Helpers
             var path = windowsPath;
             if (Platform.Unix)
             {
-                path = DriveLetter.Replace(path, @"/")
-                    .Replace(@"\", @"/");
+                path = DriveLetter.Replace(path, @"/").Replace(@"\", @"/");
             }
             return path;
         }
@@ -24,7 +23,9 @@ namespace SquishIt.Tests.Helpers
         public static string PrepareRelativePath(string path)
         {
             var directorySeparator = Path.DirectorySeparatorChar.ToString();
-            var prepareRelativePath = Path.Combine(Environment.CurrentDirectory, path.StartsWith(directorySeparator) ? "" : directorySeparator, PreparePath(path));
+            var preparePath = PreparePath(path);
+            var prepareRelativePath = Path.Combine(Environment.CurrentDirectory, path.StartsWith(directorySeparator) ? "" : directorySeparator, preparePath);
+
             return prepareRelativePath;
         }
 

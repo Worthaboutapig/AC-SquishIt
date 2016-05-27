@@ -1,14 +1,10 @@
 using System;
 using SquishIt.Framework;
 using SquishIt.Framework.Caches;
-using SquishIt.Framework.Invalidation;
-using SquishIt.Framework.Minifiers;
-using SquishIt.Framework.Renderers;
 using SquishIt.Framework.JavaScript;
 using SquishIt.Framework.Files;
 using SquishIt.Framework.Utilities;
 using SquishIt.Tests.Stubs;
-using SquishIt.Framework.Resolvers;
 
 namespace SquishIt.Tests.Helpers
 {
@@ -19,44 +15,15 @@ namespace SquishIt.Tests.Helpers
         private IFileReaderFactory _fileReaderFactory = new StubFileReaderFactory();
         private IDirectoryWrapper _directoryWrapper = new StubDirectoryWrapper();
         private IHasher _hasher = new StubHasher("hash");
-        private readonly IContentCache _contentCache = new StubContentCache();
+        private ITrustLevel _trustLevel = new TrustLevel();
+        private readonly IContentCache _bundleContentCache = new StubContentCache();
         private readonly IContentCache _rawContentCache = new StubContentCache();
 
-        private readonly string _baseOutputHref;
-        private readonly IPathTranslator _pathTranslator;
-        private readonly IResourceResolver _resourceResolver;
-        private readonly IRenderer _releaseRenderer;
-        private readonly Func<bool> _debugPredicate;
-        private readonly ICacheInvalidationStrategy _cacheInvalidationStrategy;
-        private readonly IMinifier<JavaScriptBundle> _javascriptMinifier;
-        private readonly string _hashKeyName;
-        private readonly string _virtualPathRoot;
-        private readonly IFilePathMutexProvider _filePathMutexProvider;
-        private readonly ITrustLevel _trustLevel;
+        private readonly Func<IDebugStatusReader, IFileWriterFactory, IFileReaderFactory, IDirectoryWrapper, IHasher, IContentCache, IContentCache, ITrustLevel, IBundleCreator> _bundleCreatorFunc;
 
-        public JavaScriptBundleFactory(string baseOutputHref,
-                                       IPathTranslator pathTranslator,
-                                       IResourceResolver resourceResolver,
-                                       IRenderer releaseRenderer,
-                                       Func<bool> debugPredicate,
-                                       ICacheInvalidationStrategy cacheInvalidationStrategy,
-                                       IFilePathMutexProvider filePathMutexProvider,
-                                       ITrustLevel trustLevel,
-                                       IMinifier<JavaScriptBundle> javascriptMinifier,
-                                       string hashKeyName,
-                                       string virtualPathRoot)
+        public JavaScriptBundleFactory(Func<IDebugStatusReader, IFileWriterFactory, IFileReaderFactory, IDirectoryWrapper, IHasher, IContentCache, IContentCache, ITrustLevel, IBundleCreator> bundleCreatorFunc)
         {
-            _baseOutputHref = baseOutputHref;
-            _pathTranslator = pathTranslator;
-            _resourceResolver = resourceResolver;
-            _releaseRenderer = releaseRenderer;
-            _debugPredicate = debugPredicate;
-            _cacheInvalidationStrategy = cacheInvalidationStrategy;
-            _filePathMutexProvider = filePathMutexProvider;
-            _trustLevel = trustLevel;
-            _javascriptMinifier = javascriptMinifier;
-            _hashKeyName = hashKeyName;
-            _virtualPathRoot = virtualPathRoot;
+            _bundleCreatorFunc = bundleCreatorFunc;
         }
 
         public StubFileReaderFactory FileReaderFactory { get { return _fileReaderFactory as StubFileReaderFactory; } }
@@ -92,9 +59,16 @@ namespace SquishIt.Tests.Helpers
             return this;
         }
 
+        public JavaScriptBundleFactory WithTrustLevel(ITrustLevel trustLevel)
+        {
+            _trustLevel = trustLevel;
+            return this;
+        }
+
         public JavaScriptBundle Create()
         {
-            return new JavaScriptBundle(_debugStatusReader, _fileWriterFactory, _fileReaderFactory, _directoryWrapper, _hasher, _contentCache, _rawContentCache, _baseOutputHref, _pathTranslator, _resourceResolver, _releaseRenderer, _debugPredicate, _cacheInvalidationStrategy, _filePathMutexProvider, _trustLevel, _javascriptMinifier, _hashKeyName, _virtualPathRoot);
+            var bundleCreator = _bundleCreatorFunc(_debugStatusReader, _fileWriterFactory, _fileReaderFactory, _directoryWrapper, _hasher, _bundleContentCache, _rawContentCache, _trustLevel);
+            return bundleCreator.GetJavaScriptBundle();
         }
 
         public JavaScriptBundleFactory WithContents(string css)

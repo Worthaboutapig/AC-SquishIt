@@ -18,7 +18,8 @@ namespace SquishIt.MsIeCoffeeScript
         {
 		    using (var compiler = new CoffeeScriptCompiler())
 		    {
-		        return new ProcessResult(compiler.Compile(content));
+		        var result = new ProcessResult(compiler.Compile(content));
+		        return result;
 		    }
         }
     }

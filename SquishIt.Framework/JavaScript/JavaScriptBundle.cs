@@ -50,17 +50,15 @@ namespace SquishIt.Framework.JavaScript
         }
 
         //public JavaScriptBundle(IDebugStatusReader debugStatusReader)
-        //    : this(debugStatusReader, new FileWriterFactory(Configuration.Instance.DefaultRetryableFileOpener(), 5), new FileReaderFactory(Configuration.Instance.DefaultRetryableFileOpener(), 5), new DirectoryWrapper(), Configuration.Instance.DefaultHasher(), Configuration.Instance.BundleCache, Configuration.Instance.RawContentCache, Configuration.Instance.DefaultOutputBaseHref(), Configuration.Instance.DefaultPathTranslator(),
+        //    : this(debugStatusReader, new FileWriterFactory(Configuration.Instance.DefaultRetryableFileOpener(), 5), new FileReaderFactory(Configuration.Instance.DefaultRetryableFileOpener(), 5), new DirectoryWrapper(), Configuration.Instance.DefaultHasher(), Configuration.Instance.bundleContentCache, Configuration.Instance.RawContentCache, Configuration.Instance.DefaultOutputBaseHref(), Configuration.Instance.DefaultPathTranslator(),
         //    Configuration.Instance.FileSystemResolver, Configuration.Instance.HttpResolver, Configuration.Instance.RootEmbeddedResourceResolver, Configuration.Instance.StandardEmbeddedResourceResolver, Configuration.Instance.VirtualPathRoot)
         //{
         //}
 
-        public JavaScriptBundle(IDebugStatusReader debugStatusReader, IFileWriterFactory fileWriterFactory, IFileReaderFactory fileReaderFactory, IDirectoryWrapper directoryWrapper, IHasher hasher,
-            IContentCache bundleCache, IContentCache rawContentCache, string baseOutputHref, IPathTranslator pathTranslator,
-            IResourceResolver resourceResolver, IRenderer releaseRenderer, Func<bool> debugPredicate, ICacheInvalidationStrategy cacheInvalidationStrategy, IFilePathMutexProvider filePathMutexProvider, ITrustLevel trustLevel, IMinifier<JavaScriptBundle> javsacriptMinifier, string hashKeyName, string virtualPathRoot) :
-            base(fileWriterFactory, fileReaderFactory, debugStatusReader, directoryWrapper, hasher, bundleCache, rawContentCache, baseOutputHref, pathTranslator, resourceResolver, releaseRenderer, debugPredicate, cacheInvalidationStrategy, filePathMutexProvider, trustLevel, hashKeyName, virtualPathRoot)
+        public JavaScriptBundle(string virtualPathRoot, IDebugStatusReader debugStatusReader, IFileWriterFactory fileWriterFactory, IFileReaderFactory fileReaderFactory, IDirectoryWrapper directoryWrapper, IHasher hasher, IContentCache bundleContentCache, IContentCache rawContentCache, string baseOutputHref, IPathTranslator pathTranslator, IResourceResolver resourceResolver, IRenderer releaseRenderer, Func<bool> debugPredicate, ICacheInvalidationStrategy cacheInvalidationStrategy, IFilePathMutexProvider filePathMutexProvider, ITrustLevel trustLevel, IMinifier<JavaScriptBundle> javascriptMinifier, string hashKeyName) :
+            base(fileWriterFactory, fileReaderFactory, debugStatusReader, directoryWrapper, hasher, bundleContentCache, rawContentCache, baseOutputHref, pathTranslator, resourceResolver, releaseRenderer, debugPredicate, cacheInvalidationStrategy, filePathMutexProvider, trustLevel, hashKeyName, virtualPathRoot)
         {
-            DefaultMinifier = javsacriptMinifier;
+            DefaultMinifier = javascriptMinifier;
         }
 
         protected override string Template

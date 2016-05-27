@@ -1,19 +1,19 @@
-﻿using NUnit.Framework;
+﻿//using NUnit.Framework;
 
-namespace SquishIt.AspNet.Tests
-{
-    [TestFixture]
-    public class JavaScriptBundleTests : SquishIt.Tests.JavaScriptBundleTests
-    {
-        public JavaScriptBundleTests() : base(
-            TestConfiguration.Default.DefaultOutputBaseHref(),
-            TestConfiguration.Default.DefaultPathTranslator(),
-            TestConfiguration.Default.FileSystemResolver,
-            TestConfiguration.Default.HttpResolver,
-            TestConfiguration.Default.RootEmbeddedResourceResolver,
-            TestConfiguration.Default.StandardEmbeddedResourceResolver,
-            TestConfiguration.Default.VirtualPathRoot)
-        {
-        }
-    }
-}
+//namespace SquishIt.AspNet.Tests
+//{
+//    [TestFixture]
+//    public class JavaScriptBundleTests : SquishIt.Tests.JavaScriptBundleTests
+//    {
+//        public JavaScriptBundleTests() : base(
+//            TestBundleCreator.Default.DefaultOutputBaseHref(),
+//            TestBundleCreator.Default.DefaultPathTranslator(),
+//            TestBundleCreator.Default.FileSystemResolver,
+//            TestBundleCreator.Default.HttpResolver,
+//            TestBundleCreator.Default.RootEmbeddedResourceResolver,
+//            TestBundleCreator.Default.StandardEmbeddedResourceResolver,
+//            TestBundleCreator.Default.VirtualPathRoot)
+//        {
+//        }
+//    }
+//}

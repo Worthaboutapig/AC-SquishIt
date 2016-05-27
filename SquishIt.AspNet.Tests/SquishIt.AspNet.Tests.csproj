@@ -42,7 +42,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SassTests.cs" />
     <Compile Include="ScriptPreprocessorPipelineTests.cs" />
-    <Compile Include="TestConfiguration.cs" />
+    <Compile Include="TestBundleCreator.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\SquishIt.AspNet\SquishIt.AspNet.csproj">

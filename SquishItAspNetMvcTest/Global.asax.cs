@@ -1,8 +1,7 @@
 ﻿using System.Web;
 using System.Web.Mvc;
 using System.Web.Routing;
-using SquishIt.Framework;
-using SquishIt.Framework.Utilities;
+using SquishIt.AspNet;
 
 namespace SquishItAspNetMvcTest
 {
@@ -31,21 +30,20 @@ namespace SquishItAspNetMvcTest
 
         protected void Application_Start()
         {
-            var machineConfigReader = new MachineConfigReader();
-            var debugStatusReader = new DebugStatusReader(machineConfigReader, new SquishIt.AspNet.Web.HttpContext(HttpContext.Current));
+            var bundleCreator = new DefaultBundleCreator();
 
             AreaRegistration.RegisterAllAreas();
 
             RegisterGlobalFilters(GlobalFilters.Filters);
             RegisterRoutes(RouteTable.Routes);
 
-            Bundle.JavaScript(debugStatusReader)
+            bundleCreator.GetJavaScriptBundle()
                   .Add("/assets/js/jquery_1.7.2.js")
                   .Add("/assets/js/minifyjs_test.js")
                   .ForceRelease()
                   .AsNamed("RenderNamedTest", "/output/rendernamed_test_output.js");
 
-            Bundle.JavaScript(debugStatusReader)
+            bundleCreator.GetJavaScriptBundle()
                   .Add("assets/js/jquery_1.7.2.js")
                   .Add("/assets/js/minifyjs_test.js")
                   .ForceRelease()

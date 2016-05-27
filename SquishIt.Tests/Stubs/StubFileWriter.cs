@@ -5,13 +5,15 @@ namespace SquishIt.Tests.Stubs
 {
     public class StubFileWriter: IFileWriter
     {
-        readonly string file;
-        readonly Action<string,string> writeDelegate;
+        private readonly string _file;
+        private readonly Action<string,string> _writeDelegate;
 
         public StubFileWriter(string file, Action<string,string> writeDelegate)
         {
-            this.file = file;
-            this.writeDelegate = writeDelegate;
+            if (file == null) throw new ArgumentNullException("file");
+
+            _file = file;
+            _writeDelegate = writeDelegate;
         }
 
         public void Dispose()
@@ -20,12 +22,12 @@ namespace SquishIt.Tests.Stubs
 
         public void Write(string value)
         {
-            writeDelegate(file, value);
+            _writeDelegate(_file, value);
         }
 
         public void WriteLine(string value)
         {
-            writeDelegate(file, value + Environment.NewLine);
+            _writeDelegate(_file, value + Environment.NewLine);
         }
     }
 }

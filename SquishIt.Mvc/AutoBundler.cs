@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using SquishIt.AspNet;
 using SquishIt.Framework;
 using SquishIt.Framework.Base;
 using SquishIt.Framework.CSS;
@@ -36,7 +37,7 @@ namespace SquishIt.Mvc
                        };
         }
 
-        private static IBundleCreator _bundleCreator;
+        private static IBundleCreator _bundleCreator = new DefaultBundleCreator();
         public static AutoBundlingBehavior Behavior { get; set; }
 
         // It might be nice to allow multiple link queues to be named,

@@ -142,20 +142,18 @@ namespace SquishIt.Framework.Base
 
             key = CachePrefix + key + cacheUniquenessHash;
 
-            if (!String.IsNullOrEmpty(BaseOutputHref))
+            if (!string.IsNullOrEmpty(BaseOutputHref))
             {
                 key = BaseOutputHref + key;
             }
 
-            if (IsDebuggingEnabled())
-            {
-                var content = RenderDebug(renderTo, key, renderer);
-                return content;
-            }
-            return RenderRelease(key, renderTo, renderer);
+            var isDebuggingEnabled = IsDebuggingEnabled();
+            var content = isDebuggingEnabled ? RenderDebug(renderTo, key, renderer) : RenderRelease(key, renderTo, renderer);
+
+            return content;
         }
 
-        string RenderDebug(string renderTo, string name, IRenderer renderer)
+        private string RenderDebug(string renderTo, string name, IRenderer renderer)
         {
             bundleState.DependentFiles.Clear();
 
@@ -216,13 +214,13 @@ namespace SquishIt.Framework.Base
 
             var content = sb.ToString();
 
-            if (bundleCache.ContainsKey(name))
+            if (bundleContentCache.ContainsKey(name))
             {
-                bundleCache.Remove(name);
+                bundleContentCache.Remove(name);
             }
             if (_debugStatusReader.IsDebuggingEnabled()) //default for predicate is null - only want to add to cache if not forced via predicate
             {
-                bundleCache.Add(name, content, bundleState.DependentFiles, IsDebuggingEnabled());
+                bundleContentCache.Add(name, content, bundleState.DependentFiles, IsDebuggingEnabled());
             }
 
             //need to render the bundle to caches, otherwise leave it
@@ -239,10 +237,10 @@ namespace SquishIt.Framework.Base
                 content = "";
                 return false;
             }
-            return bundleCache.TryGetValue(key, out content);
+            return bundleContentCache.TryGetValue(key, out content);
         }
 
-        string RenderRelease(string key, string renderTo, IRenderer renderer)
+        private string RenderRelease(string key, string renderTo, IRenderer renderer)
         {
             string content;
             if (!TryGetCachedBundle(key, out content))
@@ -309,7 +307,7 @@ namespace SquishIt.Framework.Base
                 //don't cache bundles where debugging was forced via predicate
                 if (!bundleState.DebugPredicate.SafeExecute())
                 {
-                    bundleCache.Add(key, content, bundleState.DependentFiles, IsDebuggingEnabled());
+                    bundleContentCache.Add(key, content, bundleState.DependentFiles, IsDebuggingEnabled());
                 }
             }
 

@@ -4,7 +4,7 @@ using SquishIt.Framework.JavaScript;
 namespace SquishIt.Framework
 {
     /// <summary>
-    /// Provides a mechanism for creating bundles from default values.
+    /// Creates new bundles.
     /// </summary>
     public interface IBundleCreator
     {

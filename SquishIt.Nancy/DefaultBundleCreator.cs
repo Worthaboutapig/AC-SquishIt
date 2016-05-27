@@ -1,21 +1,20 @@
 ﻿using System;
-using System.Web;
 using SquishIt.Framework;
 using SquishIt.Framework.Caches;
 using SquishIt.Framework.Caching;
 using SquishIt.Framework.CSS;
-using SquishIt.Framework.JavaScript;
-using SquishIt.Framework.Utilities;
-using SquishIt.Framework.Web;
-using SquishIt.Framework.Resolvers;
 using SquishIt.Framework.Files;
 using SquishIt.Framework.Invalidation;
+using SquishIt.Framework.JavaScript;
 using SquishIt.Framework.Minifiers;
 using SquishIt.Framework.Renderers;
-using HttpContext = SquishIt.AspNet.Web.HttpContext;
-using HttpUtility = SquishIt.AspNet.Web.HttpUtility;
+using SquishIt.Framework.Resolvers;
+using SquishIt.Framework.Utilities;
+using SquishIt.Framework.Web;
+using SquishIt.Nancy.Web;
+using HttpUtility = Nancy.Helpers.HttpUtility;
 
-namespace SquishIt.AspNet
+namespace SquishIt.Nancy
 {
     /// <summary>
     /// Extends the framework configuration with the System.Web-specific configuration data.
@@ -25,17 +24,17 @@ namespace SquishIt.AspNet
         /// <summary>
         /// Initialise with the web framework defaults
         /// </summary>
-        public DefaultBundleCreator(Type cssMinifierType = null, Type javascriptMinifierType = null, IPathTranslator pathTranslator = null, IHttpUtility httpUtility = null, IHttpContext httpContext = null, IVirtualPathUtility virtualPathUtility = null, IDebugStatusReader debugStatusReader = null, IFileWriterFactory fileWriterFactory = null, IFileReaderFactory fileReaderFactory = null, ITempPathProvider tempPathProvider = null, IFolderResolver fileSystemResolver = null, IFileResolver httpResolver = null, IFileResolver rootEmbeddedResourceResolver = null, IFileResolver standardEmbeddedResourceResolver = null, ICache cache = null, IContentCache bundleContentCache = null, IContentCache rawContentCache = null, string sitePhysicalPath = null, IMachineConfigReader machineConfigReader = null, ICacheInvalidationStrategy cacheInvalidationStrategy = null, IRenderer releaseRenderer = null, IDirectoryWrapper directoryWrapper = null, IHasher hasher = null, string baseOutputHref = null, ITrustLevel trustLevel = null, IFilePathMutexProvider filePathMutexProvider = null, IResourceResolver resourceResolver = null, Func<bool> debugPredicate = null, IRetryableFileOpener retryableFileOpener = null, int numberOfRetries = 5, string virtualPath = null, string applicationPhysicalPath = null, string hashKeyName = "r")
+        public DefaultBundleCreator(Type cssMinifierType = null, Type javascriptMinifierType = null, IPathTranslator pathTranslator = null, IHttpUtility httpUtility = null, IHttpContext httpContext = null, IVirtualPathUtility virtualPathUtility = null, IDebugStatusReader debugStatusReader = null, IFileWriterFactory fileWriterFactory = null, IFileReaderFactory fileReaderFactory = null, ITempPathProvider tempPathProvider = null, IFolderResolver fileSystemResolver = null, IFileResolver httpResolver = null, IFileResolver rootEmbeddedResourceResolver = null, IFileResolver standardEmbeddedResourceResolver = null, ICache cache = null, IContentCache bundleContentCache = null, IContentCache rawContentCache = null, string applicationPhysicalPath = null, IMachineConfigReader machineConfigReader = null, ICacheInvalidationStrategy cacheInvalidationStrategy = null, IRenderer releaseRenderer = null, IDirectoryWrapper directoryWrapper = null, IHasher hasher = null, string baseOutputHref = null, ITrustLevel trustLevel = null, IFilePathMutexProvider filePathMutexProvider = null, IResourceResolver resourceResolver = null, Func<bool> debugPredicate = null, IRetryableFileOpener retryableFileOpener = null, int numberOfRetries = 5, string virtualPath = null, string hashKeyName = "r")
         {
-            _virtualPath = virtualPath ?? HttpRuntime.AppDomainAppVirtualPath ?? "";
+            _virtualPath = virtualPath ?? "";
             virtualPathUtility = virtualPathUtility ?? new VirtualPathUtilityWrapper();
             HttpUtility = httpUtility ?? new HttpUtility();
-            httpContext = httpContext ?? new HttpContext(System.Web.HttpContext.Current);
+            httpContext = httpContext ?? new HttpContext();
 
             if (pathTranslator == null)
             {
-                sitePhysicalPath = sitePhysicalPath ?? HttpRuntime.AppDomainAppPath;
-                PathTranslator = new DefaultPathTranslator(sitePhysicalPath, httpContext, virtualPathUtility, applicationPhysicalPath);
+                applicationPhysicalPath = applicationPhysicalPath ?? pathResolver.GetRootPath();
+                PathTranslator = new DefaultPathTranslator(_virtualPath, applicationPhysicalPath, httpContext, virtualPathUtility);
             }
             else
             {
@@ -75,14 +74,14 @@ namespace SquishIt.AspNet
             _debugPredicate = debugPredicate;
             _releaseRenderer = releaseRenderer ?? new FileRenderer(_fileWriterFactory);
 
-            javascriptMinifierType = javascriptMinifierType ?? typeof(Framework.Minifiers.JavaScript.MsMinifier);
+            javascriptMinifierType = javascriptMinifierType ?? typeof(Framework.Minifiers.JavaScript.NullMinifier);
             if (!typeof(IMinifier<JavaScriptBundle>).IsAssignableFrom(javascriptMinifierType))
             {
                 throw new InvalidCastException(string.Format("Type '{0}' must implement '{1}' to be used for Javascript minification.", javascriptMinifierType, typeof(IMinifier<JavaScriptBundle>)));
             }
             _javascriptMinifier = (IMinifier<JavaScriptBundle>) Activator.CreateInstance(javascriptMinifierType, true);
 
-            cssMinifierType = cssMinifierType ?? typeof(Framework.Minifiers.CSS.MsMinifier);
+            cssMinifierType = cssMinifierType ?? typeof(Framework.Minifiers.CSS.NullMinifier);
             if (!typeof(IMinifier<CSSBundle>).IsAssignableFrom(cssMinifierType))
             {
                 throw new InvalidCastException(string.Format("Type '{0}' must implement '{1}' to be used for Javascript minification.", cssMinifierType, typeof(IMinifier<CSSBundle>)));

@@ -3,13 +3,15 @@ using SquishIt.Framework.Files;
 
 namespace SquishIt.Framework.Renderers
 {
-    public class FileRenderer: IRenderer
+    public class FileRenderer : IRenderer
     {
-        protected IFileWriterFactory fileWriterFactory;
+        protected IFileWriterFactory FileWriterFactory { get; }
 
         public FileRenderer(IFileWriterFactory fileWriterFactory)
-        {            
-            this.fileWriterFactory = fileWriterFactory;
+        {
+            if (fileWriterFactory == null) throw new ArgumentNullException("fileWriterFactory");
+
+            FileWriterFactory = fileWriterFactory;
         }
 
         public void Render(string content, string outputFile)
@@ -19,16 +21,16 @@ namespace SquishIt.Framework.Renderers
 
         protected void WriteFiles(string output, string outputFile)
         {
-            if (outputFile != null)
+            if (outputFile == null)
             {
-                using (var fileWriter = fileWriterFactory.GetFileWriter(outputFile))
-                {
-                    fileWriter.Write(output);
-                }
+                Console.WriteLine(output);
             }
             else
             {
-                Console.WriteLine(output);
+                using (var fileWriter = FileWriterFactory.GetFileWriter(outputFile))
+                {
+                    fileWriter.Write(output);
+                }
             }
         }
     }

@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Reflection;
 using NUnit.Framework;
 using SquishIt.Framework;
@@ -10,11 +11,12 @@ using SquishIt.Framework.Web;
 
 namespace SquishIt.Tests
 {
-	using System;
-
 	public abstract class AssetsFileHasherTests
 	{
-		private readonly IHttpUtility _httpUtility;
+        private const string HashQueryStringKeyName = "v";
+        private const string HashValue = "hashValue";
+
+        private readonly IHttpUtility _httpUtility;
 		private readonly IPathTranslator _pathTranslator;
 
 		protected AssetsFileHasherTests(IHttpUtility httpUtility, IPathTranslator pathTranslator)
@@ -36,14 +38,13 @@ namespace SquishIt.Tests
 		[Test]
 		public void DoesNotAppendHashIfFileIsRemote()
 		{
-			var hashQueryStringKeyName = "v";
 			var fileResolver = new FileSystemResolver();
 			var hasher = new StubHasher("hash");
 
-			var cssFilePath = @"C:\somepath\output.css";
-			var url = "http://www.test.com/image.jpg";
+			const string cssFilePath = @"C:\somepath\output.css";
+			const string url = "http://www.test.com/image.jpg";
 
-			var assetsFileHasher = new CSSAssetsFileHasher(hashQueryStringKeyName, fileResolver, hasher, _pathTranslator, _httpUtility);
+			var assetsFileHasher = new CSSAssetsFileHasher(HashQueryStringKeyName, fileResolver, hasher, _pathTranslator, _httpUtility);
 
 			var rewrittenUrl = assetsFileHasher.AppendFileHash(cssFilePath, url);
 
@@ -53,14 +54,13 @@ namespace SquishIt.Tests
 		[Test]
 		public void DoesNotAppendHashIfFileDoesNotExists()
 		{
-			var hashQueryStringKeyName = "v";
 			var fileResolver = new FileSystemResolver();
 			var hasher = new StubHasher("hash");
 
 			var cssFilePath = TestUtilities.PreparePath(@"C:\somepath\output.css");
-			var url = "/doesnotexist.jpg";
+			const string url = "/doesnotexist.jpg";
 
-			var assetsFileHasher = new CSSAssetsFileHasher(hashQueryStringKeyName, fileResolver, hasher, _pathTranslator, _httpUtility);
+			var assetsFileHasher = new CSSAssetsFileHasher(HashQueryStringKeyName, fileResolver, hasher, _pathTranslator, _httpUtility);
 
 			var rewrittenUrl = assetsFileHasher.AppendFileHash(cssFilePath, url);
 
@@ -70,17 +70,15 @@ namespace SquishIt.Tests
 		[Test]
 		public void CanAppendFileHashToRelativeUri()
 		{
-			var hashQueryStringKeyName = "v";
-			var hashValue = "hashValue";
-			var hasher = new StubHasher(hashValue);
+			var hasher = new StubHasher(HashValue);
 			var fileResolver = new FileSystemResolver();
 
 			var uri = Assembly.GetExecutingAssembly().CodeBase;
 			var cssFilePath = Path.GetDirectoryName(uri) + TestUtilities.PreparePath(@"\subdirectory\output.css");
 			var url = "../" + Path.GetFileName(uri);
-			var assetsFileHasher = new CSSAssetsFileHasher(hashQueryStringKeyName, fileResolver, hasher, _pathTranslator, _httpUtility);
+			var assetsFileHasher = new CSSAssetsFileHasher(HashQueryStringKeyName, fileResolver, hasher, _pathTranslator, _httpUtility);
 
-			var expectedUrl = url + "?" + hashQueryStringKeyName + "=" + hashValue;
+			var expectedUrl = url + "?" + HashQueryStringKeyName + "=" + HashValue;
 
 			var rewrittenUrl = assetsFileHasher.AppendFileHash(cssFilePath, url);
 
@@ -90,17 +88,15 @@ namespace SquishIt.Tests
 		[Test]
 		public void CanAppendFileHashToRelativeUriWithAnExistingQueryString()
 		{
-			var hashQueryStringKeyName = "v";
-			var hashValue = "hashValue";
-			var hasher = new StubHasher(hashValue);
+			var hasher = new StubHasher(HashValue);
 			var fileResolver = new FileSystemResolver();
 
 			var uri = Assembly.GetExecutingAssembly().CodeBase;
 			var cssFilePath = Path.GetDirectoryName(uri) + TestUtilities.PreparePath(@"\subdirectory\output.css");
 			var url = "../" + Path.GetFileName(uri) + "?test=value";
-			var assetsFileHasher = new CSSAssetsFileHasher(hashQueryStringKeyName, fileResolver, hasher, _pathTranslator, _httpUtility);
+			var assetsFileHasher = new CSSAssetsFileHasher(HashQueryStringKeyName, fileResolver, hasher, _pathTranslator, _httpUtility);
 
-			var expectedUrl = url + "&" + hashQueryStringKeyName + "=" + hashValue;
+			var expectedUrl = url + "&" + HashQueryStringKeyName + "=" + HashValue;
 
 			var rewrittenUrl = assetsFileHasher.AppendFileHash(cssFilePath, url);
 
@@ -110,18 +106,16 @@ namespace SquishIt.Tests
 		[Test]
 		public void CanAppendFileHashToAbsoluteUri()
 		{
-			var hashQueryStringKeyName = "v";
-			var hashValue = "hashValue";
-			var hasher = new StubHasher(hashValue);
+			var hasher = new StubHasher(HashValue);
 			var uri = Assembly.GetExecutingAssembly().CodeBase;
 			var cssFilePath = Path.Combine(Path.GetDirectoryName(uri), @"output.css");
 			var url = "/" + Path.GetFileName(uri);
 			var pathToResolveTo = Assembly.GetExecutingAssembly().Location;
-			var fileResolver = StubResolver.ForFile(pathToResolveTo);
+			var fileResolver = StubFileResolver.ForFile(pathToResolveTo);
 
-			var assetsFileHasher = new CSSAssetsFileHasher(hashQueryStringKeyName, fileResolver, hasher, _pathTranslator, _httpUtility);
+			var assetsFileHasher = new CSSAssetsFileHasher(HashQueryStringKeyName, fileResolver, hasher, _pathTranslator, _httpUtility);
 
-			var expectedUrl = url + "?" + hashQueryStringKeyName + "=" + hashValue;
+			var expectedUrl = url + "?" + HashQueryStringKeyName + "=" + HashValue;
 
 			var rewrittenUrl = assetsFileHasher.AppendFileHash(cssFilePath, url);
 
@@ -131,18 +125,16 @@ namespace SquishIt.Tests
 		[Test]
 		public void CanAppendFileHashToAbsoluteUriWithAnExistingQueryString()
 		{
-			var hashQueryStringKeyName = "v";
-			var hashValue = "hashValue";
-			var hasher = new StubHasher(hashValue);
+			var hasher = new StubHasher(HashValue);
 			var uri = Assembly.GetExecutingAssembly().CodeBase;
 			var cssFilePath = Path.GetDirectoryName(uri) + @"\output.css";
 			var url = "/" + Path.GetFileName(uri) + "?test=value";
 			var pathToResolveTo = Assembly.GetExecutingAssembly().Location;
-			var fileResolver = StubResolver.ForFile(pathToResolveTo);
+			var fileResolver = StubFileResolver.ForFile(pathToResolveTo);
 
-			var assetsFileHasher = new CSSAssetsFileHasher(hashQueryStringKeyName, fileResolver, hasher, _pathTranslator, _httpUtility);
+			var assetsFileHasher = new CSSAssetsFileHasher(HashQueryStringKeyName, fileResolver, hasher, _pathTranslator, _httpUtility);
 
-			var expectedUrl = url + "&" + hashQueryStringKeyName + "=" + hashValue;
+			var expectedUrl = url + "&" + HashQueryStringKeyName + "=" + HashValue;
 
 			var rewrittenUrl = assetsFileHasher.AppendFileHash(cssFilePath, url);
 

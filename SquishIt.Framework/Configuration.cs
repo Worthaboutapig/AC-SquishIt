@@ -52,7 +52,7 @@
 //        /// </summary>
 //        public string PhysicalPathRoot { get; set; }
 
-//        public IContentCache BundleCache { get; set; }
+//        public IContentCache bundleContentCache { get; set; }
 
 //        public IContentCache RawContentCache { get; set; }
 
