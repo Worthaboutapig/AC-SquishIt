@@ -20,7 +20,8 @@ namespace SquishIt.AspNet
     /// <summary>
     /// Extends the framework configuration with the System.Web-specific configuration data.
     /// </summary>
-    public class DefaultBundleCreator : IBundleCreator
+    public class DefaultBundleCreator : IBundleCreator,
+                                        IDefaultsResolver
     {
         /// <summary>
         /// Initialise with the web framework defaults
@@ -29,17 +30,17 @@ namespace SquishIt.AspNet
         {
             _virtualPath = virtualPath ?? HttpRuntime.AppDomainAppVirtualPath ?? "";
             virtualPathUtility = virtualPathUtility ?? new VirtualPathUtilityWrapper();
-            HttpUtility = httpUtility ?? new HttpUtility();
+            _httpUtility = httpUtility ?? new HttpUtility();
             httpContext = httpContext ?? new HttpContext(System.Web.HttpContext.Current);
 
             if (pathTranslator == null)
             {
                 sitePhysicalPath = sitePhysicalPath ?? HttpRuntime.AppDomainAppPath;
-                PathTranslator = new DefaultPathTranslator(sitePhysicalPath, httpContext, virtualPathUtility, applicationPhysicalPath);
+                _pathTranslator = new DefaultPathTranslator(sitePhysicalPath, httpContext, virtualPathUtility, applicationPhysicalPath);
             }
             else
             {
-                PathTranslator = pathTranslator;
+                _pathTranslator = pathTranslator;
             }
 
             machineConfigReader = machineConfigReader ?? new MachineConfigReader();
@@ -70,7 +71,7 @@ namespace SquishIt.AspNet
             cache = cache ?? new MemoryCache();
             _bundleContentCache = bundleContentCache ?? new BundleContentCache(cache);
             _rawContentCache = rawContentCache ?? new RawContentCache(cache);
-            _filePathMutexProvider = filePathMutexProvider ?? new FilePathMutexProvider(_hasher, PathTranslator);
+            _filePathMutexProvider = filePathMutexProvider ?? new FilePathMutexProvider(_hasher, _pathTranslator);
             _hashKeyName = hashKeyName;
             _debugPredicate = debugPredicate;
             _releaseRenderer = releaseRenderer ?? new FileRenderer(_fileWriterFactory);
@@ -87,11 +88,11 @@ namespace SquishIt.AspNet
             {
                 throw new InvalidCastException(string.Format("Type '{0}' must implement '{1}' to be used for Javascript minification.", cssMinifierType, typeof(IMinifier<CSSBundle>)));
             }
-            _cssMinifier = (IMinifier<CSSBundle>)Activator.CreateInstance(cssMinifierType, true);
+            _cssMinifier = (IMinifier<CSSBundle>) Activator.CreateInstance(cssMinifierType, true);
         }
 
-        public IHttpUtility HttpUtility { get; private set; }
-        public IPathTranslator PathTranslator { get; private set; }
+        private readonly IHttpUtility _httpUtility;
+        private readonly IPathTranslator _pathTranslator;
 
         private readonly string _virtualPath;
         private readonly IDebugStatusReader _debugStatusReader;
@@ -121,7 +122,7 @@ namespace SquishIt.AspNet
         public JavaScriptBundle GetJavaScriptBundle()
         {
             var javascriptBundle = new JavaScriptBundle(_virtualPath, _debugStatusReader, _fileWriterFactory, _fileReaderFactory, _directoryWrapper, _hasher, _bundleContentCache,
-                _rawContentCache, _baseOutputHref, PathTranslator, _resourceResolver, _releaseRenderer, _debugPredicate, _cacheInvalidationStrategy, _filePathMutexProvider,
+                _rawContentCache, _baseOutputHref, _pathTranslator, _resourceResolver, _releaseRenderer, _debugPredicate, _cacheInvalidationStrategy, _filePathMutexProvider,
                 _trustLevel, _javascriptMinifier, _hashKeyName);
 
             return javascriptBundle;
@@ -134,10 +135,35 @@ namespace SquishIt.AspNet
         public CSSBundle GetCssBundle()
         {
             var cssBundle = new CSSBundle(_virtualPath, _debugStatusReader, _fileWriterFactory, _fileReaderFactory, _directoryWrapper, _hasher, _bundleContentCache,
-                _rawContentCache, HttpUtility, _baseOutputHref, PathTranslator, _resourceResolver, _releaseRenderer, _debugPredicate, _cacheInvalidationStrategy, _filePathMutexProvider,
+                _rawContentCache, _httpUtility, _baseOutputHref, _pathTranslator, _resourceResolver, _releaseRenderer, _debugPredicate, _cacheInvalidationStrategy, _filePathMutexProvider,
                 _trustLevel, _cssMinifier, _hashKeyName);
 
             return cssBundle;
+        }
+
+        /// <summary>
+        /// Registers default instances of dependencies into an external dependency resolver.
+        /// </summary>
+        /// <param name="dependencyResolver">The dependency resolver to add the defaults to.</param>
+        public void RegisterDefaults(IDependencyResolver dependencyResolver)
+        {
+            dependencyResolver.Register(_httpUtility);
+            dependencyResolver.Register(_pathTranslator);
+            dependencyResolver.Register(_virtualPath);
+            dependencyResolver.Register(_debugStatusReader);
+            dependencyResolver.Register(_trustLevel);
+            dependencyResolver.Register(_fileWriterFactory);
+            dependencyResolver.Register(_fileReaderFactory);
+            dependencyResolver.Register(_directoryWrapper);
+            dependencyResolver.Register(_hasher);
+            dependencyResolver.Register(_cacheInvalidationStrategy);
+            dependencyResolver.Register(_bundleContentCache);
+            dependencyResolver.Register(_rawContentCache);
+            dependencyResolver.Register(_resourceResolver);
+            dependencyResolver.Register(_filePathMutexProvider);
+            dependencyResolver.Register(_releaseRenderer);
+            dependencyResolver.Register(_javascriptMinifier);
+            dependencyResolver.Register(_cssMinifier);
         }
     }
 }

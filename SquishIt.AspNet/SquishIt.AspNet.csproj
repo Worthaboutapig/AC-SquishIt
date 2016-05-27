@@ -49,7 +49,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\SquishIt.Framework\SquishIt.Framework.csproj">
-      <Project>{50c3bc24-e534-4b78-8e8e-cb2c4053321d}</Project>
+      <Project>{1c5631c4-6907-429c-be10-565a475c05f3}</Project>
       <Name>SquishIt.Framework</Name>
     </ProjectReference>
   </ItemGroup>

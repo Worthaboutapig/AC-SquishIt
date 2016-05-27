@@ -5,7 +5,7 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>9.0.30729</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{50C3BC24-E534-4B78-8E8E-CB2C4053321D}</ProjectGuid>
+    <ProjectGuid>{1C5631C4-6907-429C-BE10-565A475C05F3}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>SquishIt.Framework</RootNamespace>
@@ -100,6 +100,8 @@
     <Compile Include="CSS\RelativePathAdapter.cs" />
     <Compile Include="Files\CompositeInputResolver.cs" />
     <Compile Include="IBundleCreator.cs" />
+    <Compile Include="IDefaultsResolver.cs" />
+    <Compile Include="IDependencyResolver.cs" />
     <Compile Include="Invalidation\DefaultCacheInvalidationStrategy.cs" />
     <Compile Include="Invalidation\HashAsVirtualDirectoryCacheInvalidationStrategy.cs" />
     <Compile Include="Invalidation\ICacheInvalidationStrategy.cs" />

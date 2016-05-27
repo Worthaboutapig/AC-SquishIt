@@ -43,12 +43,7 @@
     <Compile Include="Web\Server.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\SquishIt.Framework\SquishIt.Framework.csproj">
-      <Project>{50C3BC24-E534-4B78-8E8E-CB2C4053321D}</Project>
-      <Name>SquishIt.Framework</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
+    <Reference Include="Microsoft.CSharp" />
     <Reference Include="Nancy, Version=1.4.2.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Nancy.1.4.3\lib\net40\Nancy.dll</HintPath>
       <Private>True</Private>
@@ -59,6 +54,12 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SquishIt.Framework\SquishIt.Framework.csproj">
+      <Project>{1c5631c4-6907-429c-be10-565a475c05f3}</Project>
+      <Name>SquishIt.Framework</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

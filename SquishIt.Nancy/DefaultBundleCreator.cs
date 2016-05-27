@@ -1,4 +1,5 @@
 ﻿using System;
+using Nancy;
 using SquishIt.Framework;
 using SquishIt.Framework.Caches;
 using SquishIt.Framework.Caching;
@@ -12,7 +13,6 @@ using SquishIt.Framework.Resolvers;
 using SquishIt.Framework.Utilities;
 using SquishIt.Framework.Web;
 using SquishIt.Nancy.Web;
-using HttpUtility = Nancy.Helpers.HttpUtility;
 
 namespace SquishIt.Nancy
 {
@@ -24,21 +24,20 @@ namespace SquishIt.Nancy
         /// <summary>
         /// Initialise with the web framework defaults
         /// </summary>
-        public DefaultBundleCreator(Type cssMinifierType = null, Type javascriptMinifierType = null, IPathTranslator pathTranslator = null, IHttpUtility httpUtility = null, IHttpContext httpContext = null, IVirtualPathUtility virtualPathUtility = null, IDebugStatusReader debugStatusReader = null, IFileWriterFactory fileWriterFactory = null, IFileReaderFactory fileReaderFactory = null, ITempPathProvider tempPathProvider = null, IFolderResolver fileSystemResolver = null, IFileResolver httpResolver = null, IFileResolver rootEmbeddedResourceResolver = null, IFileResolver standardEmbeddedResourceResolver = null, ICache cache = null, IContentCache bundleContentCache = null, IContentCache rawContentCache = null, string applicationPhysicalPath = null, IMachineConfigReader machineConfigReader = null, ICacheInvalidationStrategy cacheInvalidationStrategy = null, IRenderer releaseRenderer = null, IDirectoryWrapper directoryWrapper = null, IHasher hasher = null, string baseOutputHref = null, ITrustLevel trustLevel = null, IFilePathMutexProvider filePathMutexProvider = null, IResourceResolver resourceResolver = null, Func<bool> debugPredicate = null, IRetryableFileOpener retryableFileOpener = null, int numberOfRetries = 5, string virtualPath = null, string hashKeyName = "r")
+        public DefaultBundleCreator(Type cssMinifierType = null, Type javascriptMinifierType = null, IPathTranslator pathTranslator = null, IHttpUtility httpUtility = null, IHttpContext httpContext = null, IVirtualPathUtility virtualPathUtility = null, IDebugStatusReader debugStatusReader = null, IFileWriterFactory fileWriterFactory = null, IFileReaderFactory fileReaderFactory = null, ITempPathProvider tempPathProvider = null, IFolderResolver fileSystemResolver = null, IFileResolver httpResolver = null, IFileResolver rootEmbeddedResourceResolver = null, IFileResolver standardEmbeddedResourceResolver = null, ICache cache = null, IContentCache bundleContentCache = null, IContentCache rawContentCache = null, string applicationPhysicalPath = null, IMachineConfigReader machineConfigReader = null, ICacheInvalidationStrategy cacheInvalidationStrategy = null, IRenderer releaseRenderer = null, IDirectoryWrapper directoryWrapper = null, IHasher hasher = null, string baseOutputHref = null, ITrustLevel trustLevel = null, IFilePathMutexProvider filePathMutexProvider = null, IResourceResolver resourceResolver = null, Func<bool> debugPredicate = null, IRetryableFileOpener retryableFileOpener = null, int numberOfRetries = 5, string virtualPath = null, string hashKeyName = "r", IRootPathProvider rootPathProvider = null)
         {
             _virtualPath = virtualPath ?? "";
             virtualPathUtility = virtualPathUtility ?? new VirtualPathUtilityWrapper();
-            HttpUtility = httpUtility ?? new HttpUtility();
+            _httpUtility = httpUtility ?? new HttpUtility();
             httpContext = httpContext ?? new HttpContext();
 
             if (pathTranslator == null)
             {
-                applicationPhysicalPath = applicationPhysicalPath ?? pathResolver.GetRootPath();
-                PathTranslator = new DefaultPathTranslator(_virtualPath, applicationPhysicalPath, httpContext, virtualPathUtility);
+                _pathTranslator = new DefaultPathTranslator(rootPathProvider);
             }
             else
             {
-                PathTranslator = pathTranslator;
+                _pathTranslator = pathTranslator;
             }
 
             machineConfigReader = machineConfigReader ?? new MachineConfigReader();
@@ -69,19 +68,19 @@ namespace SquishIt.Nancy
             cache = cache ?? new MemoryCache();
             _bundleContentCache = bundleContentCache ?? new BundleContentCache(cache);
             _rawContentCache = rawContentCache ?? new RawContentCache(cache);
-            _filePathMutexProvider = filePathMutexProvider ?? new FilePathMutexProvider(_hasher, PathTranslator);
+            _filePathMutexProvider = filePathMutexProvider ?? new FilePathMutexProvider(_hasher, _pathTranslator);
             _hashKeyName = hashKeyName;
             _debugPredicate = debugPredicate;
             _releaseRenderer = releaseRenderer ?? new FileRenderer(_fileWriterFactory);
 
-            javascriptMinifierType = javascriptMinifierType ?? typeof(Framework.Minifiers.JavaScript.NullMinifier);
+            javascriptMinifierType = javascriptMinifierType ?? typeof(Framework.Minifiers.JavaScript.MsMinifier);
             if (!typeof(IMinifier<JavaScriptBundle>).IsAssignableFrom(javascriptMinifierType))
             {
                 throw new InvalidCastException(string.Format("Type '{0}' must implement '{1}' to be used for Javascript minification.", javascriptMinifierType, typeof(IMinifier<JavaScriptBundle>)));
             }
-            _javascriptMinifier = (IMinifier<JavaScriptBundle>) Activator.CreateInstance(javascriptMinifierType, true);
+            _javascriptMinifier = (IMinifier<JavaScriptBundle>)Activator.CreateInstance(javascriptMinifierType, true);
 
-            cssMinifierType = cssMinifierType ?? typeof(Framework.Minifiers.CSS.NullMinifier);
+            cssMinifierType = cssMinifierType ?? typeof(Framework.Minifiers.CSS.MsMinifier);
             if (!typeof(IMinifier<CSSBundle>).IsAssignableFrom(cssMinifierType))
             {
                 throw new InvalidCastException(string.Format("Type '{0}' must implement '{1}' to be used for Javascript minification.", cssMinifierType, typeof(IMinifier<CSSBundle>)));
@@ -89,8 +88,8 @@ namespace SquishIt.Nancy
             _cssMinifier = (IMinifier<CSSBundle>)Activator.CreateInstance(cssMinifierType, true);
         }
 
-        public IHttpUtility HttpUtility { get; private set; }
-        public IPathTranslator PathTranslator { get; private set; }
+        private readonly IHttpUtility _httpUtility;
+        private readonly IPathTranslator _pathTranslator;
 
         private readonly string _virtualPath;
         private readonly IDebugStatusReader _debugStatusReader;
@@ -120,7 +119,7 @@ namespace SquishIt.Nancy
         public JavaScriptBundle GetJavaScriptBundle()
         {
             var javascriptBundle = new JavaScriptBundle(_virtualPath, _debugStatusReader, _fileWriterFactory, _fileReaderFactory, _directoryWrapper, _hasher, _bundleContentCache,
-                _rawContentCache, _baseOutputHref, PathTranslator, _resourceResolver, _releaseRenderer, _debugPredicate, _cacheInvalidationStrategy, _filePathMutexProvider,
+                _rawContentCache, _baseOutputHref, _pathTranslator, _resourceResolver, _releaseRenderer, _debugPredicate, _cacheInvalidationStrategy, _filePathMutexProvider,
                 _trustLevel, _javascriptMinifier, _hashKeyName);
 
             return javascriptBundle;
@@ -133,10 +132,35 @@ namespace SquishIt.Nancy
         public CSSBundle GetCssBundle()
         {
             var cssBundle = new CSSBundle(_virtualPath, _debugStatusReader, _fileWriterFactory, _fileReaderFactory, _directoryWrapper, _hasher, _bundleContentCache,
-                _rawContentCache, HttpUtility, _baseOutputHref, PathTranslator, _resourceResolver, _releaseRenderer, _debugPredicate, _cacheInvalidationStrategy, _filePathMutexProvider,
+                _rawContentCache, _httpUtility, _baseOutputHref, _pathTranslator, _resourceResolver, _releaseRenderer, _debugPredicate, _cacheInvalidationStrategy, _filePathMutexProvider,
                 _trustLevel, _cssMinifier, _hashKeyName);
 
             return cssBundle;
+        }
+
+        /// <summary>
+        /// Registers default instances of dependencies into an external dependency resolver.
+        /// </summary>
+        /// <param name="dependencyResolver">The dependency resolver to add the defaults to.</param>
+        public void RegisterDefaults(IDependencyResolver dependencyResolver)
+        {
+            dependencyResolver.Register(_httpUtility);
+            dependencyResolver.Register(_pathTranslator);
+            dependencyResolver.Register(_virtualPath);
+            dependencyResolver.Register(_debugStatusReader);
+            dependencyResolver.Register(_trustLevel);
+            dependencyResolver.Register(_fileWriterFactory);
+            dependencyResolver.Register(_fileReaderFactory);
+            dependencyResolver.Register(_directoryWrapper);
+            dependencyResolver.Register(_hasher);
+            dependencyResolver.Register(_cacheInvalidationStrategy);
+            dependencyResolver.Register(_bundleContentCache);
+            dependencyResolver.Register(_rawContentCache);
+            dependencyResolver.Register(_resourceResolver);
+            dependencyResolver.Register(_filePathMutexProvider);
+            dependencyResolver.Register(_releaseRenderer);
+            dependencyResolver.Register(_javascriptMinifier);
+            dependencyResolver.Register(_cssMinifier);
         }
     }
 }
