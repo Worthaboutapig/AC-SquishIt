@@ -16,7 +16,7 @@ namespace SquishIt.Tests
         {
             var compiler = Activator.CreateInstance(compilerType);
             var method = compilerType.GetMethod("Compile");
-            var result = method.Invoke(compiler, new object[] {"alert 'test' "});
+            var result = method.Invoke(compiler, new object[] { "alert 'test' " });
 
             Assert.AreEqual("(function() {\n  alert('test');\n\n}).call(this);\n", result);
         }
@@ -93,7 +93,7 @@ alert 'I knew it!' if elvis?";
 }).call(this);
 ");
 
-            var result = method.Invoke(compiler, new object[] {source});
+            var result = method.Invoke(compiler, new object[] { source });
             Assert.AreEqual(expectedResult, result);
         }
 
@@ -107,12 +107,12 @@ alert 'I knew it!' if elvis?";
             string message;
             if (Platform.Mono && Platform.MonoVersion >= new Version("2.10.8"))
             {
-                var ex = Assert.Throws<TargetInvocationException>(() => method.Invoke(compiler, new object[] {""}));
+                var ex = Assert.Throws<TargetInvocationException>(() => method.Invoke(compiler, new object[] { "" }));
                 message = ex.InnerException.Message;
             }
             else
             {
-                var ex = Assert.Throws<Exception>(() => method.Invoke(compiler, new[] {""}));
+                var ex = Assert.Throws<Exception>(() => method.Invoke(compiler, new[] { "" }));
                 message = ex.Message;
             }
             Assert.AreEqual("Coffeescript not yet supported for mono.", message);

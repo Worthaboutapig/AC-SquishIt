@@ -1,5 +1,5 @@
-﻿using SquishIt.Framework;
-using SquishIt.Framework.Web;
+﻿using System;
+using SquishIt.Framework;
 
 namespace SquishIt.Tests.Helpers
 {
@@ -8,7 +8,14 @@ namespace SquishIt.Tests.Helpers
     /// </summary>
     public interface ITestBundleCreator : IBundleCreator
     {
-        JavaScriptBundleFactory JavaScriptBundleFactory { get; }
-        CssBundleFactory CssBundleFactory { get; }
+        /// <summary>
+        /// Creates a <see cref="JavaScriptBundleFactory"/> when invoked.
+        /// </summary>
+        Func<JavaScriptBundleFactory> JavaScriptBundleFactoryCreator { get; }
+
+        /// <summary>
+        /// Creates a <see cref="CssBundleFactoryCreator"/> when invoked.
+        /// </summary>
+        Func<CssBundleFactory> CssBundleFactoryCreator { get; }
     }
 }

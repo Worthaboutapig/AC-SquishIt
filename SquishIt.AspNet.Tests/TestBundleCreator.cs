@@ -31,12 +31,19 @@ namespace SquishIt.AspNet.Tests
 
             _bundleCreator = new DefaultBundleCreator(sitePhysicalPath: sitePhysicalPath, applicationPhysicalPath: applicationPhysicalPath, virtualPath: virtualPath, httpContext: _httpContext, httpResolver: _httpResolver, httpUtility: HttpUtility, virtualPathUtility: _virtualPathUtilityWrapper);
 
-            JavaScriptBundleFactory = new JavaScriptBundleFactory(GetFactoryBundleCreator(sitePhysicalPath, virtualPath, applicationPhysicalPath));
-            CssBundleFactory = new CssBundleFactory(GetFactoryBundleCreator(sitePhysicalPath, virtualPath, applicationPhysicalPath));
+            JavaScriptBundleFactoryCreator = () => new JavaScriptBundleFactory(GetFactoryBundleCreator(sitePhysicalPath, virtualPath, applicationPhysicalPath));
+            CssBundleFactoryCreator = () => new CssBundleFactory(GetFactoryBundleCreator(sitePhysicalPath, virtualPath, applicationPhysicalPath));
         }
 
-        public override JavaScriptBundleFactory JavaScriptBundleFactory { get; }
-        public override CssBundleFactory CssBundleFactory { get; }
+        /// <summary>
+        /// Creates a <see cref="JavaScriptBundleFactory"/> when invoked.
+        /// </summary>
+        public override Func<JavaScriptBundleFactory> JavaScriptBundleFactoryCreator { get; }
+
+        /// <summary>
+        /// Creates a <see cref="CssBundleFactory"/> when invoked.
+        /// </summary>
+        public override Func<CssBundleFactory> CssBundleFactoryCreator { get; }
 
         /// <summary>
         /// 

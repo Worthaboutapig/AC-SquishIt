@@ -1,103 +1,103 @@
-﻿using System;
-using System.IO;
-using NUnit.Framework;
-using SquishIt.Framework.Resolvers;
-using SquishIt.Framework.Utilities;
-using SquishIt.Tests.Helpers;
+﻿//using System;
+//using System.IO;
+//using NUnit.Framework;
+//using SquishIt.Framework.Resolvers;
+//using SquishIt.Framework.Utilities;
+//using SquishIt.Tests.Helpers;
 
-namespace SquishIt.Tests
-{
-    using Framework;
+//namespace SquishIt.Tests
+//{
+//    using Framework;
 
-    [TestFixture]
-    public class HttpResolverTest
-    {
-        private readonly string _htmlContent = TestUtilities.NormalizeLineEndings(@"<!doctype html>
-<html>
-<head>
-    <title>Example Domain</title>
+//    [TestFixture]
+//    public class HttpResolverTest
+//    {
+//        private readonly string _htmlContent = TestUtilities.NormalizeLineEndings(@"<!doctype html>
+//<html>
+//<head>
+//    <title>Example Domain</title>
 
-    <meta charset=""utf-8"" />
-    <meta http-equiv=""Content-type"" content=""text/html; charset=utf-8"" />
-    <meta name=""viewport"" content=""width=device-width, initial-scale=1"" />
-    <style type=""text/css"">
-    body {
-        background-color: #f0f0f2;
-        margin: 0;
-        padding: 0;
-        font-family: ""Open Sans"", ""Helvetica Neue"", Helvetica, Arial, sans-serif;
+//    <meta charset=""utf-8"" />
+//    <meta http-equiv=""Content-type"" content=""text/html; charset=utf-8"" />
+//    <meta name=""viewport"" content=""width=device-width, initial-scale=1"" />
+//    <style type=""text/css"">
+//    body {
+//        background-color: #f0f0f2;
+//        margin: 0;
+//        padding: 0;
+//        font-family: ""Open Sans"", ""Helvetica Neue"", Helvetica, Arial, sans-serif;
         
-    }
-    div {
-        width: 600px;
-        margin: 5em auto;
-        padding: 50px;
-        background-color: #fff;
-        border-radius: 1em;
-    }
-    a:link, a:visited {
-        color: #38488f;
-        text-decoration: none;
-    }
-    @media (max-width: 700px) {
-        body {
-            background-color: #fff;
-        }
-        div {
-            width: auto;
-            margin: 0 auto;
-            border-radius: 0;
-            padding: 1em;
-        }
-    }
-    </style>    
-</head>
+//    }
+//    div {
+//        width: 600px;
+//        margin: 5em auto;
+//        padding: 50px;
+//        background-color: #fff;
+//        border-radius: 1em;
+//    }
+//    a:link, a:visited {
+//        color: #38488f;
+//        text-decoration: none;
+//    }
+//    @media (max-width: 700px) {
+//        body {
+//            background-color: #fff;
+//        }
+//        div {
+//            width: auto;
+//            margin: 0 auto;
+//            border-radius: 0;
+//            padding: 1em;
+//        }
+//    }
+//    </style>    
+//</head>
 
-<body>
-<div>
-    <h1>Example Domain</h1>
-    <p>This domain is established to be used for illustrative examples in documents. You may use this
-    domain in examples without prior coordination or asking for permission.</p>
-    <p><a href=""http://www.iana.org/domains/example"">More information...</a></p>
-</div>
-</body>
-</html>
-");
+//<body>
+//<div>
+//    <h1>Example Domain</h1>
+//    <p>This domain is established to be used for illustrative examples in documents. You may use this
+//    domain in examples without prior coordination or asking for permission.</p>
+//    <p><a href=""http://www.iana.org/domains/example"">More information...</a></p>
+//</div>
+//</body>
+//</html>
+//");
 
-        [Test]
-        public void CanResolveResource()
-        {
-            var resourcePath = "http://example.com";
+//        [Test]
+//        public void CanResolveResource()
+//        {
+//            var resourcePath = "http://example.com";
 
-            var httpResolver = new HttpResolver(new TempPathProvider());
+//            var httpResolver = new HttpResolver(new TempPathProvider());
 
-            var path = httpResolver.ResolveFilename(resourcePath);
+//            var path = httpResolver.ResolveFilename(resourcePath);
 
-            Assert.AreEqual(_htmlContent, File.ReadAllText(path));
+//            Assert.AreEqual(_htmlContent, File.ReadAllText(path));
 
-            TempFileResolutionCache.Clear();
+//            TempFileResolutionCache.Clear();
 
-            Assert.False(File.Exists(path));
-        }
+//            Assert.False(File.Exists(path));
+//        }
 
-        [Test]
-        public void CanResolveResource_Reuses_Previous_Temp_File()
-        {
-            var resourcePath = "http://example.com";
+//        [Test]
+//        public void CanResolveResource_Reuses_Previous_Temp_File()
+//        {
+//            var resourcePath = "http://example.com";
 
-            var embeddedResourceResolver = new HttpResolver(new TempPathProvider());
+//            var embeddedResourceResolver = new HttpResolver(new TempPathProvider());
 
-            var path = embeddedResourceResolver.ResolveFilename(resourcePath);
-            var path2 = embeddedResourceResolver.ResolveFilename(resourcePath);
+//            var path = embeddedResourceResolver.ResolveFilename(resourcePath);
+//            var path2 = embeddedResourceResolver.ResolveFilename(resourcePath);
 
-            Assert.AreEqual(_htmlContent, File.ReadAllText(path));
-            Assert.AreEqual(_htmlContent, File.ReadAllText(path2));
+//            Assert.AreEqual(_htmlContent, File.ReadAllText(path));
+//            Assert.AreEqual(_htmlContent, File.ReadAllText(path2));
 
-            Assert.AreEqual(path, path2);
+//            Assert.AreEqual(path, path2);
 
-            TempFileResolutionCache.Clear();
+//            TempFileResolutionCache.Clear();
 
-            Assert.False(File.Exists(path));
-        }
-    }
-}
+//            Assert.False(File.Exists(path));
+//        }
+//    }
+//}

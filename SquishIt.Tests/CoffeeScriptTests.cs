@@ -36,8 +36,8 @@ namespace SquishIt.Tests
 
             //var prepareRelativePath = TestUtilities.PrepareRelativePath(@"brewed.js");
 
-            var resolveAppRelativePathToFileSystem = _pathTranslator.ResolveAppRelativePathToFileSystem(path);
-            var compiled = javaScriptBundleFactory.FileWriterFactory.Files[resolveAppRelativePathToFileSystem];
+            var resolvedPath = _pathTranslator.ResolveAppRelativePathToFileSystem(path);
+            var compiled = javaScriptBundleFactory.FileWriterFactory.Files[resolvedPath];
 
             Assert.AreEqual("(function(){alert(\"test\")}).call(this);\n", compiled);
             Assert.AreEqual(@"<script type=""text/javascript"" src=""/brewed.js?r=hash""></script>", tag);

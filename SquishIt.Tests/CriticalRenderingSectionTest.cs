@@ -21,7 +21,7 @@ namespace SquishIt.Tests
             var filePathMutextProvider = new Mock<IFilePathMutexProvider>();
             filePathMutextProvider.Setup(mp => mp.GetMutexForPath(testDir)).Returns(new Mutex());
 
-            using(new CriticalRenderingSection(trustLevel.Object, filePathMutextProvider.Object, testDir))
+            using (new CriticalRenderingSection(trustLevel.Object, filePathMutextProvider.Object, testDir))
             {
                 //do something
             }
@@ -44,7 +44,7 @@ namespace SquishIt.Tests
             //just want to be sure nothing is called on this
             var filePathMutextProvider = new Mock<IFilePathMutexProvider>(MockBehavior.Strict);
 
-            using(new CriticalRenderingSection(trustLevel.Object,filePathMutextProvider.Object, testDir))
+            using (new CriticalRenderingSection(trustLevel.Object, filePathMutextProvider.Object, testDir))
             {
                 //do something
             }
